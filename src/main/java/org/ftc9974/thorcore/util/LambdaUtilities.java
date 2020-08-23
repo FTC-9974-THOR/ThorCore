@@ -21,4 +21,12 @@ public final class LambdaUtilities {
         transformList(list, function, ret);
         return ret;
     }
+
+    public void a() {
+        Function<Integer, Integer> a = this::add;
+    }
+
+    public int add(int i) {
+        return i + 1;
+    }
 }

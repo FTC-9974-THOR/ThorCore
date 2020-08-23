@@ -301,7 +301,7 @@ public final class PIDF {
             }
 
             if (kD != 0) {
-                double dDeltaTime = (SystemClock.uptimeMillis() - lastDTime) / 1000.0;
+                /*double dDeltaTime = (SystemClock.uptimeMillis() - lastDTime) / 1000.0;
                 if (!periodAppliesOnlyToDTerm || dDeltaTime >= period) {
                     double d = (error - lastError) / dDeltaTime;
                     dComponent = kD * d;
@@ -309,7 +309,9 @@ public final class PIDF {
                     lastDTime = SystemClock.uptimeMillis();
                 } else {
                     dComponent = lastDTerm;
-                }
+                }*/
+                double d = (error - lastError) / deltaTime;
+                dComponent = kD * d;
             }
 
             double fComponent = kF;

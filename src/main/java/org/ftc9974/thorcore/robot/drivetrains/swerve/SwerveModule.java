@@ -3,22 +3,29 @@ package org.ftc9974.thorcore.robot.drivetrains.swerve;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.ftc9974.thorcore.control.PIDF;
 import org.ftc9974.thorcore.internal.RealizableFactory;
+import org.ftc9974.thorcore.robot.MotorType;
 import org.ftc9974.thorcore.util.MathUtilities;
 
 public final class SwerveModule {
 
-    private static final double LOWEST_ENCODER_VALUE = 0,
-                                HIGHEST_ENCODER_VALUE = 3.3,
-                                AT_DIRECTION_THRESHOLD = Math.toRadians(5);
+    private static final double AT_DIRECTION_THRESHOLD = Math.toRadians(50);
 
-    private DcMotorEx driveMotor, slewMotor;
+    public DcMotorEx driveMotor, slewMotor;
     private AnalogInput encoder;
 
     private PIDF slewPid;
+
+    private double encoderOffset;
+    private boolean inverted;
+    private double targetDirection;
+    private boolean useQuadEncoder;
+    private double lowestEncoderValue = 0;
+    private double highestEncoderValue = 5;
 
     @RealizableFactory
     public SwerveModule(String name, HardwareMap hw) {
@@ -34,24 +41,75 @@ public final class SwerveModule {
         slewPid.setContinuous(true);
     }
 
+    public void setUseQuadEncoder(boolean useQuadEncoder) {
+        this.useQuadEncoder = useQuadEncoder;
+    }
+
+    public void setLowestEncoderValue(double lowestEncoderValue) {
+        this.lowestEncoderValue = lowestEncoderValue;
+    }
+
+    public void setHighestEncoderValue(double highestEncoderValue) {
+        this.highestEncoderValue = highestEncoderValue;
+    }
+
+    public void setDriveInversion(boolean inversion) {
+        driveMotor.setDirection(inversion ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+    }
+
+    public void setSlewInversion(boolean inversion) {
+        slewMotor.setDirection(inversion ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+    }
+
+    public void setPIDFTunings(double p, double i, double d, double f) {
+        slewPid.setTunings(p, i, d, f);
+    }
+
+    public void setPIDFNominalOutput(double output) {
+        slewPid.setNominalOutputForward(output);
+    }
+
+    public void setPIDFAtTargetThreshold(double threshold) {
+        slewPid.setAtTargetThreshold(threshold);
+    }
+
+    public void setEncoderOffset(double offset) {
+        encoderOffset = offset;
+    }
+
     public double getCurrentDirection() {
-        return MathUtilities.map(encoder.getVoltage(), LOWEST_ENCODER_VALUE, HIGHEST_ENCODER_VALUE, 0, 2.0 * Math.PI);
+        if (!useQuadEncoder) {
+            double wrappedVoltage = encoder.getVoltage() - encoderOffset;
+            if (wrappedVoltage < lowestEncoderValue) {
+                wrappedVoltage += (highestEncoderValue - lowestEncoderValue);
+            }
+            return MathUtilities.map(wrappedVoltage, highestEncoderValue, lowestEncoderValue, 0, 2.0 * Math.PI);
+        } else {
+            double ticksPerRevolution = MotorType.YELLOWJACKET_71_2.ticksPerRevolution;
+            return MathUtilities.map(
+                    (slewMotor.getCurrentPosition() + encoderOffset) % ticksPerRevolution,
+                    0,
+                    ticksPerRevolution,
+                    0,
+                    2 * Math.PI
+            );
+        }
     }
 
     public void setTargetDirection(double direction) {
-        slewPid.setSetpoint(direction);
+        targetDirection = direction;
     }
 
     public double getTargetDirection() {
-        return slewPid.getSetpoint();
+        return targetDirection;
     }
 
     public boolean atTargetDirection() {
-        return Math.abs(getTargetDirection() - getCurrentDirection()) < AT_DIRECTION_THRESHOLD;
+        return Math.abs(slewPid.getLastError()) < AT_DIRECTION_THRESHOLD;
     }
 
     public void setDrivePower(double power) {
-        driveMotor.setPower(power);
+        driveMotor.setPower((inverted) ? -power : power);
     }
 
     public void resetEncoder() {
@@ -59,7 +117,37 @@ public final class SwerveModule {
         driveMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
+    public void resetSlewEncoder() {
+        slewMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slewMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public void setSlewPower(double power) {
+        slewMotor.setPower(power);
+    }
+
     public void update() {
+        double error = targetDirection - getCurrentDirection();
+        error %= 2 * Math.PI;
+        if (Math.abs(error) > Math.PI) {
+            if (error > 0) {
+                error -= 2 * Math.PI;
+            } else {
+                error += 2 * Math.PI;
+            }
+        }
+        if (Math.abs(error) > 0.5 * Math.PI) {
+            inverted = true;
+        } else {
+            inverted = false;
+        }
+
+        if (inverted) {
+            slewPid.setSetpoint(targetDirection + Math.PI);
+        } else {
+            slewPid.setSetpoint(targetDirection);
+        }
+
         slewMotor.setPower(slewPid.update(getCurrentDirection()));
     }
 }

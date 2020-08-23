@@ -15,8 +15,16 @@ public enum MotorType {
                                  // what the actual value is. I assume it's the same as the Neverest motors.
     HD_HEX_40(7 * 40 * 4),
 
-    YELLOWJACKET_5_2((int) (7 * 4 * 5.2)), // 1150 RPM
-    YELLOWJACKET_13_7((int) (7 * 4 * 13.7)); // 435 RPM
+    YELLOWJACKET_3_7((int) (7 * 4 * 3.7)),   // 1620 RPM
+    YELLOWJACKET_5_2((int) (7 * 4 * 5.2)),   // 1150 RPM
+    YELLOWJACKET_13_7((int) (7 * 4 * 13.7)), //  435 RPM
+    YELLOWJACKET_19_2((int) (7 * 4 * 19.2)), //  312 RPM
+    YELLOWJACKET_26_9((int) (7 * 4 * 26.9)), //  223 RPM
+    YELLOWJACKET_50_9((int) (7 * 4 * 50.9)), //  117 RPM
+    YELLOWJACKET_71_2((int) (7 * 4 * 71.2)), //   84 RPM
+    YELLOWJACKET_99_5((int) (7 * 4 * 99.5)), //   60 RPM
+    YELLOWJACKET_139((int) (7 * 4 * 139)),   //   43 RPM
+    YELLOWJACKET_188((int) (7 * 4 * 188));   //   30 RPM
 
     public int ticksPerRevolution;
 

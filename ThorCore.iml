@@ -110,6 +110,5 @@
     <orderEntry type="library" name="Gradle: :RobotCore-release:@aar" level="project" />
     <orderEntry type="module" module-name="FtcRobotController" />
     <orderEntry type="module" module-name="FtcRobotController" />
-    <orderEntry type="module" module-name="FtcRobotController" />
   </component>
 </module>
