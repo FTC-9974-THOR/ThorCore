@@ -14,6 +14,9 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
 import org.ftc9974.thorcore.robot.Motor;
 import org.ftc9974.thorcore.util.MathUtilities;
 
+/**
+ * Implements a kiwi drive.
+ */
 public final class KiwiDrive implements HolonomicDrivetrain {
 
     @SuppressWarnings("WeakerAccess")
@@ -35,6 +38,12 @@ public final class KiwiDrive implements HolonomicDrivetrain {
                                 W3_ANGLE = Math.toRadians(180),
                                 TURNING_EDGE_DEADBAND = 0.1;
 
+    /**
+     * Constructs a new KiwiDrive.
+     * @param hardwareMap
+     * @param turningCoefficients
+     * @param navSource
+     */
     public KiwiDrive(HardwareMap hardwareMap, PIDFCoefficients turningCoefficients, NavSource navSource) {
         this(hardwareMap, turningCoefficients, navSource, (byte) 0b000);
     }

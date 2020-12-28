@@ -9,13 +9,21 @@ public final class MotorUtilities {
 
     /**
      * Calculates ticks to go the given distance.
-     * @param distance distance, in inches
-     * @param wheelDiameter wheel diameter, in inches
+     *
+     * Works with whatever units you use, as long as distance and wheelDiameter are given in the
+     * same units.
+     *
+     * @param distance distance
+     * @param wheelDiameter wheel diameter
      * @param gearRatio ratio between wheels and motor shaft
      * @param motorType type of motor
      * @return ticks
      */
     public static int ticksForDistance(double distance, double wheelDiameter, double gearRatio, MotorType motorType) {
-        return (int) (distance * (motorType.ticksPerRevolution / (Math.PI * wheelDiameter * gearRatio)));
+        //double circumference = wheelDiameter * Math.PI;
+        //double wheelRevolutions = distance / circumference;
+        //double ticksPerWheelRevolution = motorType.ticksPerRevolution * gearRatio;
+        //return (int) (wheelRevolutions * ticksPerWheelRevolution);
+        return (int) ((distance * motorType.ticksPerRevolution * gearRatio) / (wheelDiameter * Math.PI));
     }
 }

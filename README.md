@@ -1,6 +1,10 @@
 # ThorCore
-ThorCore is a library for FTC. Not much else to say about it.
-**Note: ThorCore is in beta. Development will continue throughout the season.**
+ThorCore is a library for FTC. It implements common drivetrains, PIDF controllers, 2D Vector math,
+and more. Additionally, it provides navigation systems and development tools.
+
+This is the dev branch. Code here may be unfinished or operating incorrectly.
+
+### Note: the rest of this document is outdated. It needs to be updated to reflect SDK changes.
 
 #### Installation
 To install, start up a terminal.

@@ -2,7 +2,7 @@ package org.ftc9974.thorcore.util;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.ftc9974.thorcore.control.math.Vector2;
 
@@ -277,7 +277,7 @@ public final class MathUtilities {
         for (int value : values) {
             sum += value;
         }
-        return sum / values.length;
+        return sum / (double) values.length;
     }
 
     public static double average(double... values) {
@@ -400,5 +400,34 @@ public final class MathUtilities {
             return high;
         }
         return x;
+    }
+
+    /**
+     * Converts from frame coordinates to Cartesian coordinates.
+     *
+     * Frame space is relative to the robot's frame. The origin is at the robot's center of
+     * rotation, the +y axis points towards the robot's front, and the +x axis points towards the
+     * right side of the robot. Headings are measured relative to the +y axis, increasing
+     * counterclockwise. This is the coordinate system that much of ThorCore uses.
+     *
+     * Cartesian space is the coordinate system most of us are familiar with: the standard XY plane.
+     * In Cartesian coordinates, the origin is at the robot's center of rotation, the +x axis points
+     * towards the front of the robot, and the +y axis points towards the left side of the robot.
+     * Headings are measured relative to the +x axis, increasing counterclockwise.
+     *
+     * Headings in frame space are the same as the corresponding heading in Cartesian space, as both
+     * are measured relative to the same direction.
+     *
+     * The conversion equation can be expressed as a rotation matrix:
+     * [x']   [ 0 1][x]   [ y]
+     * [y'] = [-1 0][y] = [-x]
+     * where (x, y) is a point in frame space and (x', y') is said point converted to Cartesian
+     * space.
+     *
+     * @param point point in frame coordinates
+     * @return the same point expressed in Cartesian space
+     */
+    public static Vector2 frameToCartesian(Vector2 point) {
+        return new Vector2(point.getY(), -point.getX());
     }
 }

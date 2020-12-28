@@ -15,6 +15,10 @@ public final class TankDrive4Wheel {
     @Hardware
     public DcMotor frontLeft, frontRight, backLeft, backRight;
 
+    /**
+     * Constructs a new TankDrive4Wheel object.
+     * @param hardwareMap hardware map
+     */
     public TankDrive4Wheel(HardwareMap hardwareMap) {
         Realizer.realize(this, hardwareMap);
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);

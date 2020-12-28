@@ -288,6 +288,7 @@ public final class PIDF {
         }
 
         double deltaTime = (SystemClock.uptimeMillis() - lastTime) / 1000.0;
+        lastTime = SystemClock.uptimeMillis();
 
         if (periodAppliesOnlyToDTerm || deltaTime >= period) {
             double pComponent = 0, iComponent = 0, dComponent = 0;
@@ -335,7 +336,7 @@ public final class PIDF {
             }
 
             lastError = error;
-            lastTime = SystemClock.uptimeMillis();
+            //lastTime = SystemClock.uptimeMillis();
             lastInput = input;
             if (Math.abs(error) < errorThreshold) {
                 lastOutput = 0;

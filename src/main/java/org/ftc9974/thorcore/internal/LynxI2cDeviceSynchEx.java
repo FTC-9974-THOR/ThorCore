@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.hardware.I2cWaitControl;
 import com.qualcomm.robotcore.hardware.TimestampedData;
 import com.qualcomm.robotcore.hardware.TimestampedI2cData;
 
-public abstract class LynxI2cDeviceSynchEx extends LynxI2cDeviceSynch {
+public abstract class LynxI2cDeviceSynchEx extends LynxI2cDeviceSynchV2 {
 
     public LynxI2cDeviceSynchEx(final Context context, final LynxModule module, int bus) {
         super(context, module, bus);

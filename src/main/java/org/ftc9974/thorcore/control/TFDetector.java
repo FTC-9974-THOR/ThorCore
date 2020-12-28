@@ -2,7 +2,7 @@ package org.ftc9974.thorcore.control;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
@@ -30,9 +30,6 @@ public final class TFDetector {
     }
 
     public TFDetector(@NonNull String tfliteFile, @NonNull String vuforiaKey, @NonNull Context appContext, @NonNull CameraName camera, boolean showPreview, @NonNull String... labels) {
-        if (!ClassFactory.getInstance().canCreateTFObjectDetector()) {
-            throw new RuntimeException(String.format("Android SDK version too low! Current: %d Required: 23", Build.VERSION.SDK_INT));
-        }
         VuforiaLocalizer.Parameters vuforiaParameters = new VuforiaLocalizer.Parameters();
         vuforiaParameters.vuforiaLicenseKey = vuforiaKey;
         vuforiaParameters.cameraName = camera;

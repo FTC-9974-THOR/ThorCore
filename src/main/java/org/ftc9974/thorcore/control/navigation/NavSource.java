@@ -4,6 +4,8 @@ import org.ftc9974.thorcore.control.math.Vector2;
 
 public interface NavSource {
 
+    default void update() {}
+
     Vector2 getLocation();
 
     double getHeading();

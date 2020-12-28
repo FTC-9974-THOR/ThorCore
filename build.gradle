@@ -32,6 +32,7 @@ repositories {
     flatDir {
         dirs '../libs'
     }
+    maven { url = "https://dl.bintray.com/first-tech-challenge/ftcsdk/" }
     mavenCentral()
     jcenter()
     google()
@@ -40,9 +41,9 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':FtcRobotController')
-    implementation(name: 'FtcCommon-release', ext: 'aar')
-    implementation(name: 'Hardware-release', ext: 'aar')
-    implementation(name: 'RobotCore-release', ext: 'aar')
+    implementation 'org.firstinspires.ftc:RobotCore:6.0.1'
+    implementation 'org.firstinspires.ftc:Hardware:6.0.1'
+    implementation 'org.firstinspires.ftc:FtcCommon:6.0.1'
     implementation "org.apache.commons:commons-lang3:3.8.1"
     //implementation 'com.android.support:appcompat-v7:27.1.1'
     testImplementation 'junit:junit:4.12'

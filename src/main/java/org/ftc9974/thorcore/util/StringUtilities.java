@@ -1,5 +1,8 @@
 package org.ftc9974.thorcore.util;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 public final class StringUtilities {
 
     public static String join(String delimiter, byte... items) {
@@ -84,6 +87,18 @@ public final class StringUtilities {
         for (int i = 0; i < items.length; i++) {
             builder.append(items[i]);
             if (i != items.length - 1) {
+                builder.append(delimiter);
+            }
+        }
+        return builder.toString();
+    }
+
+    public static String join(String delimiter, Collection<String> items) {
+        StringBuilder builder = new StringBuilder();
+        Iterator<String> iterator = items.iterator();
+        for (int i = 0; i < items.size(); i++) {
+            builder.append(iterator.next());
+            if (i != items.size() - 1) {
                 builder.append(delimiter);
             }
         }
