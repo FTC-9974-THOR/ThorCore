@@ -1,6 +1,9 @@
+# Note: This readme is out of date and is under revision.
+
 # ThorCore
-ThorCore is a library for FTC. Not much else to say about it.
-**Note: ThorCore is in beta. Development will continue throughout the season.**
+ThorCore is a library for FTC.
+
+This branch is for stable releases. The dev branch contains newer code, but not all of it may work.
 
 #### Installation
 To install, start up a terminal.
