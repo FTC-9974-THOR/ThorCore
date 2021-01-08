@@ -1,5 +1,6 @@
 package org.ftc9974.thorcore.robot.sensors;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.ftc9974.thorcore.control.math.Vector2;
@@ -11,6 +12,9 @@ public class OdometerWheel {
     private final double mmPerTick;
     private final Vector2 location, direction;
     private final Vector2 cartesianLocation, cartesianDirection;
+    private final LynxModule connectedModule;
+
+    private double calibrationFactor;
 
     private double origin;
 
@@ -34,13 +38,17 @@ public class OdometerWheel {
      *                  magnitude of 1. when the robot moves in the same direction as this vector,
      *                  the encoder should count up.
      */
-    public OdometerWheel(DcMotorEx motor, double wheelDiameter, double gearRatio, double ticksPerRevolution, Vector2 locationOnRobot, Vector2 direction) {
+    public OdometerWheel(DcMotorEx motor, double wheelDiameter, double gearRatio, double ticksPerRevolution, Vector2 locationOnRobot, Vector2 direction, LynxModule connectedRevHub) {
         encoder = motor;
         mmPerTick = (wheelDiameter * Math.PI) / (gearRatio * ticksPerRevolution);
         location = locationOnRobot;
-        this.direction = direction;
+        // out of paranoia, normalize the direction vector
+        this.direction = direction.normalized();
         cartesianLocation = MathUtilities.frameToCartesian(locationOnRobot);
         cartesianDirection = MathUtilities.frameToCartesian(direction).normalized();
+        connectedModule = connectedRevHub;
+
+        calibrationFactor = 1;
 
         origin = 0;
     }
@@ -104,7 +112,27 @@ public class OdometerWheel {
         return cartesianDirection;
     }
 
+    public DcMotorEx getEncoderMotor() {
+        return encoder;
+    }
+
+    public LynxModule getConnectedModule() {
+        return connectedModule;
+    }
+
+    public double getCalibrationFactor() {
+        return calibrationFactor;
+    }
+
+    public void setCalibrationFactor(double calibrationFactor) {
+        this.calibrationFactor = calibrationFactor;
+    }
+
+    public double getMmPerTick() {
+        return mmPerTick;
+    }
+
     public void reset() {
-        origin = getPosition();
+        origin = encoder.getCurrentPosition() * mmPerTick;
     }
 }

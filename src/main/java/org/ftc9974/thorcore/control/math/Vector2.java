@@ -314,8 +314,8 @@ public final class Vector2 {
      * @return rotated vector
      */
     public static Vector2 rotate(Vector2 vec1, double theta) {
-        double[] rotated = MathUtilities.rotate2D(new double[] {vec1.getX(), vec1.getY()}, theta);
-        return new Vector2(rotated[0], rotated[1]);
+        double cos = Math.cos(theta), sin = Math.sin(theta);
+        return new Vector2(vec1.getX() * cos - vec1.getY() * sin, vec1.getX() * sin + vec1.getY() * cos);
     }
 
     /**
@@ -366,5 +366,30 @@ public final class Vector2 {
                 MathUtilities.lerp(a.getX(), b.getX(), t),
                 MathUtilities.lerp(a.getY(), b.getY(), t)
         );
+    }
+
+    public static Vector2 unitHeadingVector(double theta) {
+        return new Vector2(Math.cos(theta), Math.sin(theta));
+    }
+
+    /**
+     * Gets the smallest signed angle between two vectors.
+     *
+     * The sign of the returned value is dependent on the direction of the "sweep" going from
+     * <code>from</code> to <code>to</code>. If the sweep is counterclockwise, the returned value is
+     * positive. If the sweep is clockwise, the returned value is negative.
+     *
+     * Effectively, the returned value is the angle by which you would have to rotate <code>from</code>
+     * to point in the same direction as <code>to</code>.
+     *
+     * @param from vector to measure from
+     * @param to vector to measure to
+     * @return the smallest angle, in radians, between from and to
+     */
+    public static double signedAngleBetween(Vector2 from, Vector2 to) {
+        // dot = |from||to|cos(theta)
+        double absAngle = Math.acos(dot(from, to) / (from.getMagnitude() * to.getMagnitude()));
+        double direction = crossMag(from, to);
+        return Math.copySign(absAngle, direction);
     }
 }

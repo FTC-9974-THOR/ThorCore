@@ -1,8 +1,11 @@
 package org.ftc9974.thorcore;
 
+import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -17,237 +20,238 @@ public final class GamepadEnhanced {
         BACK, GUIDE
     }
 
-    private Gamepad gamepad;
-    private boolean lastA, lastB, lastX, lastY, lastLeftBumper, lastRightBumper, lastDpadUp, lastDpadDown, lastDpadLeft, lastDpadRight, lastBack, lastGuide;
-    private float lastLeftTrigger, lastRightTrigger;
-    private double lastLeftX, lastLeftY, lastRightX, lastRightY;
+    public enum EdgeType {
+        RISING,
+        FALLING,
+        RISING_OR_FALLING
+    }
 
-    private List<Runnable> aEvents, bEvents, xEvents, yEvents, leftBumperEvents, rightBumperEvents, dpadDownEvents, dpadUpEvents, dpadLeftEvents, dpadRightEvents, backEvents, guideEvents;
+    private static class GamepadState {
+        boolean a, b, x, y, leftBumper, rightBumper, dpadUp, dpadDown, dpadLeft, dpadRight, back, guide;
+        float leftTrigger, rightTrigger;
+        double leftX, leftY, rightX, rightY;
+
+        private GamepadState() {
+            a = b = x = y = leftBumper = rightBumper = dpadUp = dpadDown = dpadLeft = dpadRight = back = guide = false;
+            leftTrigger = rightTrigger = 0;
+            leftX = leftY = rightX = rightY = 0;
+        }
+
+        private GamepadState(Gamepad other) {
+            Gamepad gamepad;
+            try {
+                // try to create a local copy that can't be affected by other threads. Gamepads
+                // receive updates asynchronously, and their state variables are not thread safe.
+                gamepad = new Gamepad();
+                gamepad.copy(other);
+            } catch (RobotCoreException e) {
+                // if we can't make a copy, use the non-thread-safe one and hope nothing gets
+                // changed while we store its state
+                gamepad = other;
+            }
+            a = gamepad.a;
+            b = gamepad.b;
+            x = gamepad.x;
+            y = gamepad.y;
+            leftBumper = gamepad.left_bumper;
+            rightBumper = gamepad.right_bumper;
+            dpadUp = gamepad.dpad_up;
+            dpadDown = gamepad.dpad_down;
+            dpadLeft = gamepad.dpad_left;
+            dpadRight = gamepad.dpad_right;
+            back = gamepad.back;
+            guide = gamepad.guide;
+            leftTrigger = gamepad.left_trigger;
+            rightTrigger = gamepad.right_trigger;
+            leftX = gamepad.left_stick_x;
+            leftY = -gamepad.left_stick_y;
+            rightX = gamepad.right_stick_x;
+            rightY = -gamepad.right_stick_y;
+        }
+
+        private boolean getButtonState(Button button) {
+            switch (button) {
+                case A:
+                    return a;
+                case B:
+                    return b;
+                case X:
+                    return x;
+                case Y:
+                    return y;
+                case LEFT_BUMPER:
+                    return leftBumper;
+                case RIGHT_BUMPER:
+                    return rightBumper;
+                case DPAD_UP:
+                    return dpadUp;
+                case DPAD_DOWN:
+                    return dpadDown;
+                case DPAD_LEFT:
+                    return dpadLeft;
+                case DPAD_RIGHT:
+                    return dpadRight;
+                case BACK:
+                    return back;
+                case GUIDE:
+                    return guide;
+                default:
+                    throw new IllegalArgumentException(String.format("Button %s does not exist", button.name()));
+            }
+        }
+    }
+
+    private final Gamepad gamepad;
+    // storing two states is necessary for edge detection
+    // gamepads have an annoying tendency to update their state variables while you're using them,
+    // so storing two states avoids any race conditions
+    private GamepadState lastState, currentState;
+
+    // the variable type might look crazy but it's *really* fast
+    // uses enum ordinal as index into array
+    // index by button then edge type
+    private final EnumMap<Button, EnumMap<EdgeType, LinkedList<Runnable>>> bindings;
 
     public GamepadEnhanced(Gamepad gamepad) {
         this.gamepad = gamepad;
-        aEvents = new ArrayList<>();
-        bEvents = new ArrayList<>();
-        xEvents = new ArrayList<>();
-        yEvents = new ArrayList<>();
-        leftBumperEvents = new ArrayList<>();
-        rightBumperEvents = new ArrayList<>();
-        dpadDownEvents = new ArrayList<>();
-        dpadUpEvents = new ArrayList<>();
-        dpadLeftEvents = new ArrayList<>();
-        dpadRightEvents = new ArrayList<>();
-        backEvents = new ArrayList<>();
-        guideEvents = new ArrayList<>();
+        bindings = new EnumMap<>(Button.class);
+        for (Button button : Button.values()) {
+            EnumMap<EdgeType, LinkedList<Runnable>> edgeMap = new EnumMap<>(EdgeType.class);
+            for (EdgeType edgeType : EdgeType.values()) {
+                edgeMap.put(edgeType, new LinkedList<>());
+            }
+            bindings.put(button, edgeMap);
+        }
+        advanceState();
     }
 
-    public void bind(Button button, Runnable func) {
-        switch (button) {
-            case A:
-                aEvents.add(func);
-                break;
-            case B:
-                bEvents.add(func);
-                break;
-            case X:
-                xEvents.add(func);
-                break;
-            case Y:
-                yEvents.add(func);
-                break;
-            case LEFT_BUMPER:
-                leftBumperEvents.add(func);
-                break;
-            case RIGHT_BUMPER:
-                rightBumperEvents.add(func);
-                break;
-            case DPAD_UP:
-                dpadUpEvents.add(func);
-                break;
-            case DPAD_DOWN:
-                dpadDownEvents.add(func);
-                break;
-            case DPAD_LEFT:
-                dpadLeftEvents.add(func);
-                break;
-            case DPAD_RIGHT:
-                dpadRightEvents.add(func);
-                break;
-            case BACK:
-                backEvents.add(func);
-                break;
-            case GUIDE:
-                guideEvents.add(func);
-                break;
-            default: // utter, complete paranoia
-                break;
+    // try to keep execution time short
+    // think of it as an interrupt service routine
+    public void bind(Button button, EdgeType edgeType, Runnable callback) {
+        bindings.get(button).get(edgeType).add(callback);
+    }
+
+    private void advanceState() {
+        if (currentState == null) {
+            lastState = new GamepadState();
+        } else {
+            lastState = currentState;
         }
+        currentState = new GamepadState(gamepad);
     }
 
     public void update() {
-        if (gamepad.a && !lastA) {
-            for (Runnable func : aEvents) {
-                func.run();
+        advanceState();
+        for (Button button : bindings.keySet()) {
+            boolean lastButtonState = lastState.getButtonState(button);
+            boolean currentButtonState = currentState.getButtonState(button);
+            boolean rising = !lastButtonState && currentButtonState;
+            boolean falling = lastButtonState && !currentButtonState;
+            if (rising) {
+                for (Runnable callback : bindings.get(button).get(EdgeType.RISING)) {
+                    callback.run();
+                }
+            }
+            if (falling) {
+                for (Runnable callback : bindings.get(button).get(EdgeType.FALLING)) {
+                    callback.run();
+                }
+            }
+            if (rising || falling) {
+                for (Runnable callback: bindings.get(button).get(EdgeType.RISING_OR_FALLING)) {
+                    callback.run();
+                }
             }
         }
-        if (gamepad.b && !lastB) {
-            for (Runnable func : bEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.x && !lastX) {
-            for (Runnable func : xEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.y && !lastY) {
-            for (Runnable func : yEvents) {
-                func.run();
-            }
-        }
-
-        if (gamepad.left_bumper && !lastLeftBumper) {
-            for (Runnable func : leftBumperEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.right_bumper && !lastRightBumper) {
-            for (Runnable func : rightBumperEvents) {
-                func.run();
-            }
-        }
-
-        if (gamepad.dpad_up && !lastDpadUp) {
-            for (Runnable func : dpadUpEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.dpad_down && !lastDpadDown) {
-            for (Runnable func : dpadDownEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.dpad_left && !lastDpadLeft) {
-            for (Runnable func : dpadLeftEvents) {
-                func.run();
-            }
-        }
-        if (gamepad.dpad_right && !lastDpadRight) {
-            for (Runnable func : dpadRightEvents) {
-                func.run();
-            }
-        }
-
-        lastA = gamepad.a;
-        lastB = gamepad.b;
-        lastX = gamepad.x;
-        lastY = gamepad.y;
-        lastLeftBumper = gamepad.left_bumper;
-        lastRightBumper = gamepad.right_bumper;
-        lastDpadUp = gamepad.dpad_up;
-        lastDpadDown = gamepad.dpad_down;
-        lastDpadLeft = gamepad.dpad_left;
-        lastDpadRight = gamepad.dpad_right;
-        lastBack = gamepad.back;
-        lastGuide = gamepad.guide;
-
-        lastLeftTrigger = gamepad.left_trigger;
-        lastRightTrigger = gamepad.right_trigger;
-
-        lastLeftX = -gamepad.left_stick_x;
-        lastLeftY = -gamepad.left_stick_y;
-        lastRightX = -gamepad.right_stick_x;
-        lastRightY = -gamepad.right_stick_y;
-    }
-
-    public boolean atRest() {
-        return gamepad.atRest();
     }
 
     public double getLeftX() {
-        return -gamepad.left_stick_x;
+        return currentState.leftX;
     }
 
     public double getLeftY() {
-        return -gamepad.left_stick_y;
+        return currentState.leftY;
     }
 
     public double getRightX() {
-        return -gamepad.right_stick_x;
+        return currentState.rightX;
     }
 
     public double getRightY() {
-        return -gamepad.right_stick_y;
+        return currentState.rightY;
     }
 
     public boolean getA() {
-        return gamepad.a;
+        return currentState.a;
     }
 
     public boolean getB() {
-        return gamepad.b;
+        return currentState.b;
     }
 
     public boolean getX() {
-        return gamepad.x;
+        return currentState.x;
     }
 
     public boolean getY() {
-        return gamepad.y;
+        return currentState.y;
     }
 
     public boolean getLeftBumper() {
-        return gamepad.left_bumper;
+        return currentState.leftBumper;
     }
 
     public boolean getRightBumper() {
-        return gamepad.right_bumper;
+        return currentState.rightBumper;
     }
 
     public boolean getDpadUp() {
-        return gamepad.dpad_up;
+        return currentState.dpadUp;
     }
 
     public boolean getDpadDown() {
-        return gamepad.dpad_down;
+        return currentState.dpadDown;
     }
 
     public boolean getDpadLeft() {
-        return gamepad.dpad_left;
+        return currentState.dpadLeft;
     }
 
     public boolean getDpadRight() {
-        return gamepad.dpad_right;
+        return currentState.dpadRight;
     }
 
     public boolean getBack() {
-        return gamepad.back;
+        return currentState.back;
     }
 
     public boolean getGuide() {
-        return gamepad.guide;
+        return currentState.guide;
     }
 
     public float getLeftTrigger() {
-        return gamepad.left_trigger;
+        return currentState.leftTrigger;
     }
 
     public float getRightTrigger() {
-        return gamepad.right_trigger;
+        return currentState.rightTrigger;
     }
 
     public boolean getADown() {
-        return !lastA && gamepad.a;
+        return !lastState.a && currentState.a;
     }
 
     public boolean getBDown() {
-        return !lastB && gamepad.b;
+        return !lastState.b && currentState.b;
     }
 
     public boolean getXDown() {
-        return !lastX && gamepad.x;
+        return !lastState.x && currentState.x;
     }
 
     public boolean getYDown() {
-        return !lastY && gamepad.y;
+        return !lastState.x && currentState.x;
     }
+
+    // todo add the rest of the edges
 }

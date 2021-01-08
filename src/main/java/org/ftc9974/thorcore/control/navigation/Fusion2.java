@@ -71,13 +71,44 @@ public class Fusion2 {
 
         // generate the motion profile used for speed control, based on the control parameters.
         double totalDistance = point.getMagnitude();
-        TrapezoidalMotionProfile motionProfile = new TrapezoidalMotionProfile(
-                new TrapezoidalMotionProfile.Node(0, startSpeed),
-                new TrapezoidalMotionProfile.Node(rampUpDistance, cruiseSpeed),
-                new TrapezoidalMotionProfile.Node(totalDistance - rampDownDistance, cruiseSpeed),
-                new TrapezoidalMotionProfile.Node(totalDistance - crawlDistance, crawlSpeed),
-                new TrapezoidalMotionProfile.Node(totalDistance, crawlSpeed)
-        );
+        TrapezoidalMotionProfile motionProfile;
+        // there are 2 special cases for if the total distance of the move is not long enough to
+        // reach cruise speed.
+        if (totalDistance < crawlDistance) {
+            motionProfile = new TrapezoidalMotionProfile(
+                    new TrapezoidalMotionProfile.Node(0, crawlSpeed),
+                    new TrapezoidalMotionProfile.Node(totalDistance, crawlSpeed)
+            );
+        } else if (totalDistance < rampUpDistance + rampDownDistance + crawlDistance) {
+            // rampUpSpeed = (cruiseSpeed - startSpeed) / rampUpDistance
+            // rampDownSpeed = (crawlSpeed - cruiseSpeed) / rampDownDistance
+            // cruisePatch = totalDistance - crawlDistance
+            // rampUpSpeed * intersectionPoint + startSpeed = rampDownSpeed * (intersectionPoint - cruisePatch) + crawlSpeed
+            // rampUpSpeed * intersectionPoint - rampDownSpeed * (intersectionPoint - cruisePatch) = crawlSpeed - startSpeed
+            // rampUpSpeed * intersectionPoint - rampDownSpeed * intersectionPoint + rampDownSpeed * cruisePatch = crawlSpeed - startSpeed
+            // (rampUpSpeed - rampDownSpeed) * intersectionPoint = crawlSpeed - startSpeed - rampDownSpeed * cruisePatch
+            // intersectionPoint = (crawlSpeed - startSpeed - rampDownSpeed * cruisePatch) / (rampUpSpeed - rampDownSpeed)
+            // speedAtIntersectionPoint = rampUpSpeed * intersectionPoint + startSpeed
+            double rampUpSpeed = (cruiseSpeed - startSpeed) / rampDownDistance;
+            double rampDownSpeed = (crawlSpeed - cruiseSpeed) / rampDownDistance;
+            double cruisePatch = totalDistance - crawlDistance;
+            double intersectionPoint = (crawlSpeed - startSpeed - rampDownSpeed * cruisePatch) / (rampUpSpeed - rampDownSpeed);
+            double speedAtIntersectionPoint = rampUpSpeed * intersectionPoint + startSpeed;
+            motionProfile = new TrapezoidalMotionProfile(
+                    new TrapezoidalMotionProfile.Node(0, startSpeed),
+                    new TrapezoidalMotionProfile.Node(intersectionPoint, speedAtIntersectionPoint),
+                    new TrapezoidalMotionProfile.Node(cruisePatch, crawlSpeed),
+                    new TrapezoidalMotionProfile.Node(totalDistance, crawlSpeed)
+            );
+        } else {
+            motionProfile = new TrapezoidalMotionProfile(
+                    new TrapezoidalMotionProfile.Node(0, startSpeed),
+                    new TrapezoidalMotionProfile.Node(rampUpDistance, cruiseSpeed),
+                    new TrapezoidalMotionProfile.Node(totalDistance - rampDownDistance, cruiseSpeed),
+                    new TrapezoidalMotionProfile.Node(totalDistance - crawlDistance, crawlSpeed),
+                    new TrapezoidalMotionProfile.Node(totalDistance, crawlSpeed)
+            );
+        }
 
         // calculate the encoder targets
         int[] targets = calculator.calculate(point);

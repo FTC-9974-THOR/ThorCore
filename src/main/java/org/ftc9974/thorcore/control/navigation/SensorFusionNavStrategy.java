@@ -16,9 +16,11 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /**
- * A navigation strategy that uses encoders, the IMU, and Vuforia.
+ * Note: this class (as well as the rest of this Javadoc comment) was made during the Rover Ruckus
+ * season, and has behaviour tuned specifically for my team's robot for that season. As such, I
+ * wouldn't recommend using this class.
  *
- * It is the end-all, be-all navigation system.
+ * A navigation strategy that uses encoders, the IMU, and Vuforia.
  *
  * 12/30/18 12:26 AM: THE CODE GODS HAVE TESTED ME AND I HAVE BESTED THEM!
  */

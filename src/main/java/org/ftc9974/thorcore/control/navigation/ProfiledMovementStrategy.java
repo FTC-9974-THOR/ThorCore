@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.util.LastKnown;
 import org.ftc9974.thorcore.control.HolonomicDrivetrain;
 import org.ftc9974.thorcore.control.math.Vector2;
 
+// todo work in progress
 public final class ProfiledMovementStrategy implements MovementStrategy {
 
     private Vector2 startPoint, targetPoint;

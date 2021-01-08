@@ -18,8 +18,6 @@ public final class SwerveDrive implements HolonomicDrivetrain {
     private Vector2 leftPosition, rightPosition;
     private double trackwidth;
 
-    private Telemetry telemetry;
-
     public SwerveDrive(HardwareMap hw) {
         leftModule = new SwerveModule("left", hw);
         rightModule = new SwerveModule("right", hw);
@@ -49,6 +47,8 @@ public final class SwerveDrive implements HolonomicDrivetrain {
         leftModule.setDriveInversion(true);
         rightModule.setDriveInversion(true);
 
+        // todo these need to be adjustable
+        // these are hard-coded positions from the swerve drive i developed these kinematics on
         leftPosition = new Vector2(-0.5 * 432 + 60, 0);
         rightPosition = new Vector2(0.5 * 432 - 60, 0);
 
@@ -56,10 +56,6 @@ public final class SwerveDrive implements HolonomicDrivetrain {
 
         leftModule.setTargetDirection(0.5 * Math.PI);
         rightModule.setTargetDirection(0.5 * Math.PI);
-    }
-
-    public void setTelemetry(Telemetry telemetry) {
-        this.telemetry = telemetry;
     }
 
     public void setLeftEncoderOffset(double offset) {
@@ -72,14 +68,14 @@ public final class SwerveDrive implements HolonomicDrivetrain {
 
     @Override
     public void drive(double x, double y, double rot) {
-        telemetry.addData("Left At Target", leftModule.atTargetDirection());
-        telemetry.addData("Right At Target", rightModule.atTargetDirection());
+        //telemetry.addData("Left At Target", leftModule.atTargetDirection());
+        //telemetry.addData("Right At Target", rightModule.atTargetDirection());
 
         Vector2 inputVector = new Vector2(x, y);
         double inputHeading = inputVector.getHeading();
         double inputMag = Math.min(inputVector.getMagnitude(), 1);
 
-        telemetry.addData("Input Mag", inputMag);
+        //telemetry.addData("Input Mag", inputMag);
         double movementVectorMag = 0.5 * (trackwidth + 10) * inputMag;
         double leftAngle, rightAngle;
         leftAngle = rightAngle = inputHeading;
@@ -92,9 +88,9 @@ public final class SwerveDrive implements HolonomicDrivetrain {
         double arcAngle = 2.0 * inputRot;
         double arcRadius = chord / (2.0 * Math.sin(arcAngle / 2.0));
 
-        telemetry.addData("Mag", movementVectorMag);
-        telemetry.addData("iRot", inputRot);
-        telemetry.addData("ArcRadius", arcRadius);
+        //telemetry.addData("Mag", movementVectorMag);
+        //telemetry.addData("iRot", inputRot);
+        //telemetry.addData("ArcRadius", arcRadius);
 
         /*Vector2 leftWorkingPos = leftPosition.rotate(inputHeading - 0.5 * Math.PI);
         Vector2 rightWorkingPos = rightPosition.rotate(inputHeading - 0.5 * Math.PI);
@@ -107,10 +103,10 @@ public final class SwerveDrive implements HolonomicDrivetrain {
         Vector2 arcToLeft = leftPosition.subtract(arcCenter);
         Vector2 arcToRight = rightPosition.subtract(arcCenter);
 
-        telemetry.addData("AtL M", arcToLeft.getMagnitude());
-        telemetry.addData("AtR M", arcToRight.getMagnitude());
-        telemetry.addData("AtL H", arcToLeft.getHeading());
-        telemetry.addData("AtR H", arcToRight.getHeading());
+        //telemetry.addData("AtL M", arcToLeft.getMagnitude());
+        //telemetry.addData("AtR M", arcToRight.getMagnitude());
+        //telemetry.addData("AtL H", arcToLeft.getHeading());
+        //telemetry.addData("AtR H", arcToRight.getHeading());
 
         if (inputRot != 0) {
             leftAngle = arcToLeft.getHeading();
@@ -132,13 +128,14 @@ public final class SwerveDrive implements HolonomicDrivetrain {
                 leftSpeed = leftArcRadius / greaterRadius;
                 rightSpeed = rightArcRadius / greaterRadius;
 
-                telemetry.addData("Greater Radius", greaterRadius);
-                telemetry.addData("Left Speed PM", leftSpeed);
-                telemetry.addData("Right Speed PM", rightSpeed);
+                //telemetry.addData("Greater Radius", greaterRadius);
+                //telemetry.addData("Left Speed PM", leftSpeed);
+                //telemetry.addData("Right Speed PM", rightSpeed);
 
                 // speed mixing
                 // controls how low speed turns and strafes interact
-                double speedFactor = MathUtilities.constrain(inputMag + Math.abs(rot), 0, 1);
+                //double speedFactor = MathUtilities.constrain(inputMag + Math.abs(rot), 0, 1);
+                double speedFactor = Math.max(inputMag, Math.abs(rot));
                 leftSpeed *= speedFactor;
                 rightSpeed *= speedFactor;
             } else {
@@ -146,10 +143,10 @@ public final class SwerveDrive implements HolonomicDrivetrain {
             }
         }
 
-        telemetry.addData("Left Angle", leftAngle);
-        telemetry.addData("Right Angle", rightAngle);
-        telemetry.addData("Left Speed", leftSpeed);
-        telemetry.addData("Right Speed", rightSpeed);
+        //telemetry.addData("Left Angle", leftAngle);
+        //telemetry.addData("Right Angle", rightAngle);
+        //telemetry.addData("Left Speed", leftSpeed);
+        //telemetry.addData("Right Speed", rightSpeed);
 
         if (inputMag > 0.05 || Math.abs(rot) > 0.05) {
             leftModule.setTargetDirection(leftAngle);

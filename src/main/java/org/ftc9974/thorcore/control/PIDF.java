@@ -287,8 +287,12 @@ public final class PIDF {
             return 0;
         }
 
-        double deltaTime = (SystemClock.uptimeMillis() - lastTime) / 1000.0;
-        lastTime = SystemClock.uptimeMillis();
+        long currentTime = System.nanoTime();
+        if (lastTime < 0) {
+            lastTime = currentTime;
+        }
+        double deltaTime = (currentTime - lastTime) / 1e9;
+        lastTime = currentTime;
 
         if (periodAppliesOnlyToDTerm || deltaTime >= period) {
             double pComponent = 0, iComponent = 0, dComponent = 0;
@@ -301,7 +305,7 @@ public final class PIDF {
                 iComponent = kI * runningIntegral;
             }
 
-            if (kD != 0) {
+            if (kD != 0 && deltaTime != 0) {
                 /*double dDeltaTime = (SystemClock.uptimeMillis() - lastDTime) / 1000.0;
                 if (!periodAppliesOnlyToDTerm || dDeltaTime >= period) {
                     double d = (error - lastError) / dDeltaTime;

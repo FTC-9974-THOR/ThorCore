@@ -11,4 +11,8 @@ public interface NavSource {
     double getHeading();
 
     boolean trustworthy();
+
+    default CoordinateSystem coordinateSystem() {
+        return CoordinateSystem.FRAME;
+    }
 }

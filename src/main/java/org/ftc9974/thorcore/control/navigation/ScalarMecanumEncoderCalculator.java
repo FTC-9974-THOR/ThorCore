@@ -4,6 +4,7 @@ import org.ftc9974.thorcore.control.math.Vector2;
 import org.ftc9974.thorcore.control.navigation.EncoderPositionCalculator;
 import org.ftc9974.thorcore.util.MathUtilities;
 
+@Deprecated
 public class ScalarMecanumEncoderCalculator implements EncoderPositionCalculator {
 
     private static final double RADICAL_SIN_QUARTER_PI = 1 / Math.sin(0.25 * Math.PI);

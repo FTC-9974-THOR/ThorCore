@@ -20,6 +20,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.ftc9974.thorcore.control.math.Vector2;
 
+// reading data from the IMU is very slow, with each read taking about 30ms. If speed is important,
+// the IMU might not be a good choice.
 public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationIntegrator {
 
     private BNO055IMU imu;
@@ -81,6 +83,8 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
         return new Vector2(position.x, position.y);
     }
 
+    // reading data from the IMU is very slow, with each read taking about 30ms. If speed is
+    // important, the IMU might not be a good choice.
     @Override
     public double getHeading() {
         Orientation orientation = getOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.XYZ);

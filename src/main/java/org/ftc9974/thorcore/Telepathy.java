@@ -162,6 +162,10 @@ public final class Telepathy {
         return true;
     }
 
+    public static boolean isInitialized() {
+        return initialized;
+    }
+
     private static void doLifecycle() {
         while (!workerThreadShouldStop.get()) {
             try {

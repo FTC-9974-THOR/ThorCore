@@ -105,10 +105,10 @@ public final class MecanumDrive implements HolonomicDrivetrain {
         bl = r * (bl / max);
         br = r * (br / max);*/
 
-        frontLeft.setPower(-fl);
-        frontRight.setPower(-fr);
-        backLeft.setPower(-bl);
-        backRight.setPower(-br);
+        frontLeft.setPower(fl);
+        frontRight.setPower(fr);
+        backLeft.setPower(bl);
+        backRight.setPower(br);
     }
 
     /**

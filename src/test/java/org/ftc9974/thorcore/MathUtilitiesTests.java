@@ -4,6 +4,11 @@ import org.ftc9974.thorcore.util.MathUtilities;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.Random;
+import java.util.Scanner;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -26,5 +31,28 @@ public class MathUtilitiesTests {
     @Test
     public void mapTest() {
         Assert.assertEquals(180, MathUtilities.map(0.5, 0, 1, 0, 360), 0.1);
+    }
+
+    @Test
+    public void testFresnelIntegral() throws IOException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        Assert.assertNotNull(classLoader);
+        Scanner scanner = new Scanner(classLoader.getResourceAsStream("fresnelTestData.csv"));
+        scanner.useDelimiter(",");
+        while (scanner.hasNextDouble()) {
+            double x = scanner.nextDouble();
+            double expectedS = scanner.nextDouble();
+            double expectedC = scanner.nextDouble();
+            double[] actual = MathUtilities.fresnelIntegral(x);
+            Assert.assertEquals(expectedC, actual[0], 0.001);
+            Assert.assertEquals(expectedS, actual[1], 0.001);
+        }
+    }
+
+    public void testEvaluatePolynomial() {
+        Random rng = new Random();
+        for (int i = 0; i < 10000; i++) {
+            int degree = rng.nextInt(20) + 1;
+        }
     }
 }
