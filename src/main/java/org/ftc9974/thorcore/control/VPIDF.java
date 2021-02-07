@@ -7,22 +7,20 @@ https://deltamotion.com/support/webhelp/rmctools/Controller_Features/Control_Mod
  */
 public final class VPIDF {
 
-    private double velocityFeedForwardGain,
-                   accelerationFeedForwardGain,
-                   jerkFeedForwardGain,
-                   proportionalGain,
-                   differentialGain,
-                   integralGain;
+    private double kP, kI, kD, kF;
 
-    private double targetVelocity,
-                   targetAcceleration,
-                   targetJerk;
+    private double setpoint;
 
-    private double lastPosition,
-                   lastVelocity;
+    private double runningIntegral;
+    private double integralLow, integralHigh;
 
-    public double update(double input) {
+    private double contLow, contHigh;
+    private boolean continuous;
 
-        return 0;
-    }
+    private double tolerance;
+
+    private double peakOutputForward, peakOutputReverse;
+    private double nominalOutputForward, nominalOutputReverse;
+
+
 }

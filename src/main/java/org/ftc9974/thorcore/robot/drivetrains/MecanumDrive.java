@@ -7,9 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.ftc9974.thorcore.control.HolonomicDrivetrain;
-import org.ftc9974.thorcore.control.PIDF;
-import org.ftc9974.thorcore.control.navigation.IMUNavSource;
-import org.ftc9974.thorcore.control.navigation.NavSource;
 import org.ftc9974.thorcore.meta.Realizer;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
 import org.ftc9974.thorcore.util.MathUtilities;
@@ -24,6 +21,7 @@ public final class MecanumDrive implements HolonomicDrivetrain {
     public DcMotor frontLeft, frontRight, backLeft, backRight;
 
     private boolean xInv, yInv, tInv;
+    private boolean flEncInv, frEncInv, blEncInv, brEncInv;
     private boolean flInv, frInv, blInv, brInv;
 
     /**
@@ -64,6 +62,22 @@ public final class MecanumDrive implements HolonomicDrivetrain {
      * @param br inversion flag for the back right encoder
      */
     public void setEncoderInversion(boolean fl, boolean fr, boolean bl, boolean br) {
+        flEncInv = fl;
+        frEncInv = fr;
+        blEncInv = bl;
+        brEncInv = br;
+    }
+
+    /**
+     * Sets inversion flags for each motor.
+     * Passing true will invert the corresponding motor.
+     *
+     * @param fl inversion flag for the front left motor
+     * @param fr inversion flag for the front right motor
+     * @param bl inversion flag for the back left motor
+     * @param br inversion flag for the back right motor
+     */
+    public void setMotorInversion(boolean fl, boolean fr, boolean bl, boolean br) {
         flInv = fl;
         frInv = fr;
         blInv = bl;
@@ -98,6 +112,11 @@ public final class MecanumDrive implements HolonomicDrivetrain {
             bl /= max;
             br /= max;
         }
+
+        if (flInv) fl *= -1;
+        if (frInv) fr *= -1;
+        if (blInv) bl *= -1;
+        if (brInv) br *= -1;
 
         /*double r = Math.hypot(x, y);
         fl = r * (fl / max);
@@ -155,10 +174,10 @@ public final class MecanumDrive implements HolonomicDrivetrain {
     @Override
     public @Size(4) int[] getEncoderPositions() {
         return new int[] {
-                (flInv ? -1 : 1) * frontLeft.getCurrentPosition(),
-                (frInv ? -1 : 1) * frontRight.getCurrentPosition(),
-                (blInv ? -1 : 1) * backLeft.getCurrentPosition(),
-                (brInv ? -1 : 1) * backRight.getCurrentPosition()
+                (flEncInv ? -1 : 1) * frontLeft.getCurrentPosition(),
+                (frEncInv ? -1 : 1) * frontRight.getCurrentPosition(),
+                (blEncInv ? -1 : 1) * backLeft.getCurrentPosition(),
+                (brEncInv ? -1 : 1) * backRight.getCurrentPosition()
         };
     }
 
@@ -198,9 +217,9 @@ public final class MecanumDrive implements HolonomicDrivetrain {
      */
     @Override
     public void setMotorPowers(@Size(4) double[] powers) {
-        frontLeft.setPower(powers[0]);
-        frontRight.setPower(powers[1]);
-        backLeft.setPower(powers[2]);
-        backRight.setPower(powers[3]);
+        frontLeft.setPower((flInv) ? -powers[0] : powers[0]);
+        frontRight.setPower((frInv) ? -powers[1] : powers[1]);
+        backLeft.setPower((blInv) ? -powers[2] : powers[2]);
+        backRight.setPower((brInv) ? -powers[3] : powers[3]);
     }
 }

@@ -1,5 +1,7 @@
 package org.ftc9974.thorcore.control.navigation;
 
+import androidx.annotation.Size;
+
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.ftc9974.thorcore.control.HolonomicDrivetrain;
@@ -9,12 +11,14 @@ import org.ftc9974.thorcore.control.math.CompositeParametricCurve;
 import org.ftc9974.thorcore.control.math.LineSegment;
 import org.ftc9974.thorcore.control.math.ParametricCurve;
 import org.ftc9974.thorcore.control.math.Vector2;
+import org.ftc9974.thorcore.util.MathUtilities;
 
 public class PathPlanner {
 
     public enum HeadingMode {
         MANUAL,
         FOLLOW_PATH,
+        FOLLOW_PATH_REVERSE,
         POINT_AT_TARGET
     }
 
@@ -48,7 +52,7 @@ public class PathPlanner {
                        PIDFCoefficients headingPidCoefs) {
         rb = drivetrain;
         this.navSource = navSource;
-        path = new CompositeParametricCurve(new LineSegment(Vector2.ZERO, Vector2.ZERO));
+        path = new CompositeParametricCurve();
         gvf = new GuidingVectorField(path, kC, kP);
         gvf.setConvergenceDistance(convergenceDistance);
         gvf.setConvergenceEnabled(true);
@@ -66,9 +70,22 @@ public class PathPlanner {
 
         headingMode = HeadingMode.FOLLOW_PATH;
         headingPid = new PIDF(headingPidCoefs);
+        headingPid.setPhase(true);
         headingPid.setAtTargetThreshold(atHeadingTargetThreshold);
         headingPid.setContinuityRange(-Math.PI, Math.PI);
         headingPid.setContinuous(true);
+    }
+    
+    public void setHeadingPidPhase(boolean inverted) {
+        headingPid.setPhase(inverted);
+    }
+
+    public void setKC(double kC) {
+        gvf.setKC(kC);
+    }
+
+    public void setKP(double kP) {
+        gvf.setKP(kP);
     }
 
     public void setCruiseSpeed(double speed) {
@@ -109,6 +126,10 @@ public class PathPlanner {
         headingMode = mode;
     }
 
+    public HeadingMode getHeadingMode() {
+        return headingMode;
+    }
+
     public void setTargetHeading(double heading) {
         targetHeading = heading;
     }
@@ -122,24 +143,45 @@ public class PathPlanner {
     }
 
     public void add(ParametricCurve... segments) {
-        if (!hasPath) {
-            path.removeSegment(0);
-            hasPath = true;
-        }
+        if (segments.length == 0) return;
+        hasPath = true;
         path.addSegments(segments);
+    }
+
+    public void clear() {
+        hasPath = false;
+        path.clearSegments();
     }
 
     public void move() {
         navSource.update();
-        if (!hasPath) {
-            return;
-        }
 
-        Vector2 currentLocation = navSource.getLocation();
+        Vector2 currentLocation = navSource.getLocation(coordinateSystem);
         double currentHeading = navSource.getHeading();
 
-        // todo have the conversion done in NavSource by specifying coordinate system as a parameter
-        currentLocation = navSource.coordinateSystem().convertTo(coordinateSystem, currentLocation);
+        if (!hasPath) {
+            if (atPositionalTarget() && !atHeadingTarget()) {
+                headingPid.setNominalOutputForward(0.25);
+                headingPid.setNominalOutputReverse(-0.25);
+            } else {
+                headingPid.setNominalOutputForward(0);
+                headingPid.setNominalOutputReverse(0);
+            }
+
+            currentHeading = MathUtilities.wraparound(currentHeading, -Math.PI, Math.PI);
+            switch (headingMode) {
+                case POINT_AT_TARGET:
+                    Vector2 toTarget = headingTargetPoint.subtract(currentLocation);
+                    targetHeading = CoordinateSystem.CARTESIAN.convertTo(coordinateSystem, toTarget.getHeading());
+                case FOLLOW_PATH:
+                case FOLLOW_PATH_REVERSE:
+                case MANUAL:
+                    headingPid.setSetpoint(targetHeading);
+                    break;
+            }
+            rb.drive(0, 0, headingPid.update(currentHeading));
+            return;
+        }
 
         GuidingVectorField.Guidance guidance = gvf.guidance(currentLocation);
 
@@ -148,17 +190,25 @@ public class PathPlanner {
 
         double distance = guidance.distanceToPath + guidance.distanceAlongPath;
         double speed = speedProfile.apply(distance);
+        if (distance < atPositionalTargetThreshold) {
+            speed = 0;
+        }
 
-        while (currentHeading > Math.PI) {
-            currentHeading -= 2 * Math.PI;
-        }
-        while (currentHeading < -Math.PI) {
-            currentHeading += 2 * Math.PI;
-        }
+        currentHeading = MathUtilities.wraparound(currentHeading, -Math.PI, Math.PI);
 
         switch (headingMode) {
             case FOLLOW_PATH:
-                headingTargetPoint = currentLocation.add(guidance.direction);
+            case FOLLOW_PATH_REVERSE:
+                if (guidance.distanceAlongPath < crawlDistance) {
+                    headingTargetPoint = guidance.deriv;
+                } else {
+                    headingTargetPoint = guidance.direction;
+                }
+                if (headingMode == HeadingMode.FOLLOW_PATH_REVERSE) {
+                    headingTargetPoint = currentLocation.add(headingTargetPoint.scalarMultiply(-1));
+                } else {
+                    headingTargetPoint = currentLocation.add(headingTargetPoint);
+                }
             case POINT_AT_TARGET:
                 Vector2 toTarget = headingTargetPoint.subtract(currentLocation);
                 targetHeading = CoordinateSystem.CARTESIAN.convertTo(coordinateSystem, toTarget.getHeading());
@@ -168,8 +218,8 @@ public class PathPlanner {
         }
 
         if (atPositionalTarget() && !atHeadingTarget()) {
-            headingPid.setNominalOutputForward(0.22);
-            headingPid.setNominalOutputReverse(-0.22);
+            headingPid.setNominalOutputForward(0.25);
+            headingPid.setNominalOutputReverse(-0.25);
         } else {
             headingPid.setNominalOutputForward(0);
             headingPid.setNominalOutputReverse(0);
@@ -185,7 +235,7 @@ public class PathPlanner {
     }
 
     public boolean atPositionalTarget() {
-        return lastDistanceAlongPath > 0 && lastDistanceAlongPath < atPositionalTargetThreshold;
+        return !hasPath || (lastDistanceAlongPath > 0 && lastDistanceAlongPath < atPositionalTargetThreshold);
     }
 
     public boolean atHeadingTarget() {

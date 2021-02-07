@@ -9,10 +9,6 @@ public class CompositeParametricCurve extends ParametricCurve {
     private final ArrayList<ParametricCurve> segments;
 
     public CompositeParametricCurve(ParametricCurve... curveSegments) {
-        if (curveSegments.length == 0) {
-            throw new IllegalArgumentException("At least one curve segment must be given.");
-        }
-
         segments = new ArrayList<>(Arrays.asList(curveSegments));
 
         // make sure that the curve is contiguous - that is, each curve ends at the same point that
@@ -233,7 +229,6 @@ public class CompositeParametricCurve extends ParametricCurve {
      * @param index index of the segment to remove
      */
     public void removeSegment(int index) {
-        // todo check for contiguity
         segments.remove(index);
     }
 
@@ -249,6 +244,10 @@ public class CompositeParametricCurve extends ParametricCurve {
         }
         // subLists are backed by the original list
         segments.subList(start, end).clear();
+    }
+
+    public void clearSegments() {
+        segments.clear();
     }
 
     /**

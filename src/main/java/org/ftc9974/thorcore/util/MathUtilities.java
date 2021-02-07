@@ -412,6 +412,38 @@ public final class MathUtilities {
         return x;
     }
 
+    public static int wraparound(int x, int low, int high) {
+        // check for valid low & high arguments, because this method will get stuck in an infinite
+        // loop if low is greater than high.
+        if (low > high) {
+            throw new IllegalArgumentException("high must be greater than low");
+        }
+        int range = high - low;
+        while (x < low) {
+            x += range;
+        }
+        while (x > high) {
+            x -= range;
+        }
+        return x;
+    }
+
+    public static double wraparound(double x, double low, double high) {
+        // check for valid low & high arguments, because this method will get stuck in an infinite
+        // loop if low is greater than high.
+        if (low > high) {
+            throw new IllegalArgumentException("high must be greater than low");
+        }
+        double range = high - low;
+        while (x < low) {
+            x += range;
+        }
+        while (x > high) {
+            x -= range;
+        }
+        return x;
+    }
+
     /**
      * Converts from frame coordinates to Cartesian coordinates.
      *
@@ -556,6 +588,7 @@ public final class MathUtilities {
     // it is, however, a useful value when working with angles in radians,
     // so I'll keep it in and make it public.
     public static final double PIO2 = Math.PI / 2.0;
+    public static final double SQRT_PI = Math.sqrt(Math.PI);
 
     /**
      * Evaluates the normalized Fresnel sine and cosine integrals.
@@ -583,12 +616,6 @@ public final class MathUtilities {
      * https://gams.nist.gov/cgi-bin/serve.cgi/Package/CEPHES
      *
      * All credit goes to Stephen Moshier.
-     *
-     * Implementation Notes:
-     * Java stores numbers in big endian format, and (since Java 1.2) allows the JVM to use
-     * additional precision as allowed by the hardware it's running on. Thus, I'm using the MIEEE
-     * flag in Cephes to recognize Java's big endianness and the strictfp keyword to force Java to
-     * use IEEE 754 floating point math, just to make sure math behaves the way Cephes expects it to.
      *
      * @param xxa argument to the sine and cosine Fresnel integrals
      * @return a 2-element array storing the result. the first element is the result of the cosine
@@ -677,7 +704,7 @@ public final class MathUtilities {
             s = Math.sin(t);
             t = Math.PI * x;
             cc = 0.5 + (f * s - g * c) / t;
-            ss = 0.5 - (f * x + g * s) / t;
+            ss = 0.5 - (f * c + g * s) / t;
         }
         if (xxa < 0.0) {
             cc = -cc;

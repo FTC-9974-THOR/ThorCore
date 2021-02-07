@@ -314,6 +314,18 @@ public final class Vector2 {
      * @return rotated vector
      */
     public static Vector2 rotate(Vector2 vec1, double theta) {
+        // time saving special cases
+        if (theta == 0) {
+            // all arithmetic methods in Vector2 are non-mutating, so make a copy of vec1 to uphold
+            // the pattern
+            return new Vector2(vec1.getX(), vec1.getY());
+        } else if (theta == MathUtilities.PIO2) {
+            return new Vector2(-vec1.getY(), vec1.getX());
+        } else if (theta == -MathUtilities.PIO2) {
+            return new Vector2(vec1.getY(), -vec1.getX());
+        } else if (Math.abs(theta) == Math.PI) {
+            return new Vector2(-vec1.getX(), -vec1.getY());
+        }
         double cos = Math.cos(theta), sin = Math.sin(theta);
         return new Vector2(vec1.getX() * cos - vec1.getY() * sin, vec1.getX() * sin + vec1.getY() * cos);
     }

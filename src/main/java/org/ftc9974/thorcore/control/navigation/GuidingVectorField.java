@@ -6,12 +6,13 @@ import org.ftc9974.thorcore.control.math.Vector2;
 public class GuidingVectorField {
 
     public static class Guidance {
-        public Vector2 direction, closestPoint;
+        public Vector2 direction, closestPoint, deriv;
         public double distanceToPath, distanceAlongPath;
 
-        private Guidance(Vector2 direction, Vector2 closestPoint, double distanceToPath, double distanceAlongPath) {
+        private Guidance(Vector2 direction, Vector2 closestPoint, Vector2 deriv, double distanceToPath, double distanceAlongPath) {
             this.direction = direction;
             this.closestPoint = closestPoint;
+            this.deriv = deriv;
             this.distanceToPath = distanceToPath;
             this.distanceAlongPath = distanceAlongPath;
         }
@@ -73,7 +74,7 @@ public class GuidingVectorField {
         Vector2 toCurve = closestPoint.pToPoint;
 
         // guidance responsible for moving the robot onto the path
-        Vector2 correctiveGuidance = toCurve.scalarMultiply(kC * toCurve.getMagnitude());
+        Vector2 correctiveGuidance = toCurve.scalarMultiply(kC/* * toCurve.getMagnitude()*/);
 
         // guidance responsible for moving the robot along the path
         Vector2 primaryGuidance = closestPoint.firstDeriv.normalized().scalarMultiply(kP);
@@ -105,6 +106,7 @@ public class GuidingVectorField {
         return new Guidance(
                 correctiveGuidance.add(primaryGuidance).normalized(),
                 closestPoint.point,
+                closestPoint.firstDeriv,
                 toCurve.getMagnitude(),
                 distanceAlongCurve
         );

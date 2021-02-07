@@ -1,5 +1,7 @@
 package org.ftc9974.thorcore.control;
 
+import java.util.Arrays;
+
 public final class SlidingAverageFilter {
 
     // samples are stored in a circular buffer, because it doesn't matter
@@ -13,6 +15,11 @@ public final class SlidingAverageFilter {
     public SlidingAverageFilter(int order) {
         this.order = order;
         samples = new double[order];
+    }
+
+    public SlidingAverageFilter(int order, double initialValue) {
+        this(order);
+        Arrays.fill(samples, initialValue);
     }
 
     /**

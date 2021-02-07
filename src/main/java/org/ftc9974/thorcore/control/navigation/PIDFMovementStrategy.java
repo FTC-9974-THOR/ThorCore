@@ -37,10 +37,6 @@ public final class PIDFMovementStrategy implements MovementStrategy {
         xT = xTh;
         yT = yTh;
         tT = tTh;
-
-        xPid.setIfPeriodAppliesOnlyToDTerm(true);
-        yPid.setIfPeriodAppliesOnlyToDTerm(true);
-        thetaPid.setIfPeriodAppliesOnlyToDTerm(true);
     }
 
     public PIDFMovementStrategy(PIDFCoefficients xCoefficients, PIDFCoefficients yCoefficients, PIDFCoefficients thetaCoefficients, double xNominal, double yNominal, double tNominal, double xTh, double yTh, double tTh) {
@@ -65,10 +61,6 @@ public final class PIDFMovementStrategy implements MovementStrategy {
         xT = xTh;
         yT = yTh;
         tT = tTh;
-
-        xPid.setIfPeriodAppliesOnlyToDTerm(true);
-        yPid.setIfPeriodAppliesOnlyToDTerm(true);
-        thetaPid.setIfPeriodAppliesOnlyToDTerm(true);
     }
 
     @Override

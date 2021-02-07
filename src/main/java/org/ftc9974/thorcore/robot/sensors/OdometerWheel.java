@@ -2,7 +2,10 @@ package org.ftc9974.thorcore.robot.sensors;
 
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.RobotLog;
 
+import org.ftc9974.thorcore.control.SlidingAverageFilter;
 import org.ftc9974.thorcore.control.math.Vector2;
 import org.ftc9974.thorcore.util.MathUtilities;
 
@@ -12,11 +15,14 @@ public class OdometerWheel {
     private final double mmPerTick;
     private final Vector2 location, direction;
     private final Vector2 cartesianLocation, cartesianDirection;
-    private final LynxModule connectedModule;
 
     private double calibrationFactor;
 
     private double origin;
+
+    private double lastTimestamp;
+    private double lastPosition;
+    private final SlidingAverageFilter velocityEstimate;
 
     /**
      * Constructs a new OdometerWheel.
@@ -38,7 +44,7 @@ public class OdometerWheel {
      *                  magnitude of 1. when the robot moves in the same direction as this vector,
      *                  the encoder should count up.
      */
-    public OdometerWheel(DcMotorEx motor, double wheelDiameter, double gearRatio, double ticksPerRevolution, Vector2 locationOnRobot, Vector2 direction, LynxModule connectedRevHub) {
+    public OdometerWheel(DcMotorEx motor, double wheelDiameter, double gearRatio, double ticksPerRevolution, Vector2 locationOnRobot, Vector2 direction) {
         encoder = motor;
         mmPerTick = (wheelDiameter * Math.PI) / (gearRatio * ticksPerRevolution);
         location = locationOnRobot;
@@ -46,11 +52,14 @@ public class OdometerWheel {
         this.direction = direction.normalized();
         cartesianLocation = MathUtilities.frameToCartesian(locationOnRobot);
         cartesianDirection = MathUtilities.frameToCartesian(direction).normalized();
-        connectedModule = connectedRevHub;
 
         calibrationFactor = 1;
 
         origin = 0;
+
+        lastTimestamp = 0;
+        velocityEstimate = new SlidingAverageFilter(3, 0);
+        lastPosition = 0;
     }
 
     /**
@@ -64,7 +73,18 @@ public class OdometerWheel {
      * @return position
      */
     public double getPosition() {
-        return encoder.getCurrentPosition() * mmPerTick - origin;
+        double position = encoder.getCurrentPosition();
+        if (encoder.getDirection() == DcMotorSimple.Direction.REVERSE) {
+            position = -position;
+        }
+        if (position != lastPosition) {
+            long currentTimestamp = System.nanoTime();
+            double deltaTime = (currentTimestamp - lastTimestamp) / 1e9;
+            velocityEstimate.update((position - lastPosition) / deltaTime);
+            lastTimestamp = currentTimestamp;
+            lastPosition = position;
+        }
+        return position * mmPerTick - origin;
     }
 
     /**
@@ -73,7 +93,17 @@ public class OdometerWheel {
      * @return velocity, in mm/s
      */
     public double getVelocity() {
-        return encoder.getVelocity() * mmPerTick;
+        double rawVelocity = encoder.getVelocity();
+        if (encoder.getDirection() == DcMotorSimple.Direction.REVERSE) {
+            rawVelocity = -rawVelocity;
+        }
+        if (Double.isNaN(lastPosition)) {
+            return rawVelocity * mmPerTick;
+        } else {
+            double fixed = inverseOverflow(rawVelocity, velocityEstimate.get());
+            RobotLog.vv("OdometerWheel", "real: %f estimate: %f fixed: %f (%f mm/s)", rawVelocity, velocityEstimate.get(), fixed, fixed * mmPerTick);
+            return fixed * mmPerTick;
+        }
     }
 
     /**
@@ -116,10 +146,6 @@ public class OdometerWheel {
         return encoder;
     }
 
-    public LynxModule getConnectedModule() {
-        return connectedModule;
-    }
-
     public double getCalibrationFactor() {
         return calibrationFactor;
     }
@@ -134,5 +160,17 @@ public class OdometerWheel {
 
     public void reset() {
         origin = encoder.getCurrentPosition() * mmPerTick;
+        if (encoder.getDirection() == DcMotorSimple.Direction.REVERSE) {
+            origin = -origin;
+        }
+    }
+
+    // many thanks to henopied
+    // https://github.com/acmerobotics/road-runner-quickstart/pull/90
+    private static double inverseOverflow(double velocity, double estimate) {
+        while (Math.abs(estimate - velocity) > 0x8000) {
+            velocity += Math.signum(estimate - velocity) * 0x10000;
+        }
+        return velocity;
     }
 }

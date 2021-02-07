@@ -1,9 +1,10 @@
 apply plugin: 'com.android.library'
 
+def USE_PACKAGED_NATIVE_LIBRARIES = false
+
 android {
     compileSdkVersion 28
-
-
+    ndkVersion "21.0.6113669"
 
     defaultConfig {
         minSdkVersion 25
@@ -13,6 +14,15 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a"
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_ARM_NEON=ON"
+            }
+        }
     }
 
     buildTypes {
@@ -25,6 +35,30 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    if (!USE_PACKAGED_NATIVE_LIBRARIES) {
+        externalNativeBuild {
+            cmake {
+                buildStagingDirectory ".cxx"
+                path "CMakeLists.txt"
+            }
+        }
+        sourceSets.main.jniLibs.srcDirs = []
+    } else {
+        sourceSets.main.jniLibs.srcDirs "lib/"
+    }
+}
+
+if (!USE_PACKAGED_NATIVE_LIBRARIES) {
+    task copyNativeLibrariesToLib(type: Copy) {
+        for (abi in ["arm64-v8a", "armeabi-v7a"]) {
+            from(".cxx/cmake/debug/" + abi + "/lib") {
+                include(abi + "/*.so")
+            }
+        }
+
+        into "./lib"
     }
 }
 

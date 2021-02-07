@@ -165,7 +165,7 @@ public final class TwoWheelOdometerNavSource implements NavSource {
         currentRobotState.t = System.nanoTime();
         double deltaTime = (currentRobotState.t - lastRobotState.t) * (1e-9);
         RobotLog.vv(TAG, "Δtime: %.6f", deltaTime);
-        fastReadSensorState();
+        //fastReadSensorState();
         double currentHeading = imu.getAngularOrientation(
                 AxesReference.EXTRINSIC,
                 AxesOrder.XYZ,
@@ -377,7 +377,7 @@ public final class TwoWheelOdometerNavSource implements NavSource {
     }
 
     // invokes deep magic to synchronize encoder and imu reads as much as possible
-    private double[] fastReadSensorState() {
+    /*private double[] fastReadSensorState() {
         double lambdaA, dLambdaA, lambdaB, dLambdaB;
         ByteBuffer imuData = ByteBuffer.wrap(imu.read(BNO055IMU.Register.GYR_DATA_X_LSB, 12)).order(ByteOrder.LITTLE_ENDIAN);
         if (wheelA.getConnectedModule().equals(wheelB.getConnectedModule())) {
@@ -438,7 +438,7 @@ public final class TwoWheelOdometerNavSource implements NavSource {
                 thetaX, thetaY, thetaZ,
                 omegaX, omegaY, omegaZ
         };
-    }
+    }*/
 
     public void setLocation(Vector2 location) {
         this.location = location;

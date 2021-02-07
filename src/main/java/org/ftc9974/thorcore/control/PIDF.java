@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.ftc9974.thorcore.util.MathUtilities;
+
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
@@ -158,14 +160,6 @@ public final class PIDF {
         return period;
     }
 
-    public void setIfPeriodAppliesOnlyToDTerm(boolean applies) {
-        periodAppliesOnlyToDTerm = applies;
-    }
-
-    public boolean getIfPeriodAppliesOnlyToDTerm() {
-        return periodAppliesOnlyToDTerm;
-    }
-
     public void setAtTargetThreshold(double threshold) {
         errorThreshold = threshold;
     }
@@ -237,14 +231,7 @@ public final class PIDF {
      */
     public void setSetpoint(double setpoint) {
         if (continuous) {
-            double continuousSetpoint = setpoint;
-            while (continuousSetpoint < contLow) {
-                continuousSetpoint += contHigh - contLow;
-            }
-            while (continuousSetpoint > contHigh) {
-                continuousSetpoint -= contHigh - contLow;
-            }
-            this.setpoint = continuousSetpoint;
+            this.setpoint = MathUtilities.wraparound(setpoint, contLow, contHigh);
         } else {
             this.setpoint = setpoint;
         }
@@ -294,7 +281,7 @@ public final class PIDF {
         double deltaTime = (currentTime - lastTime) / 1e9;
         lastTime = currentTime;
 
-        if (periodAppliesOnlyToDTerm || deltaTime >= period) {
+        if (deltaTime >= period) {
             double pComponent = 0, iComponent = 0, dComponent = 0;
 
             pComponent = kP * error;
@@ -306,15 +293,6 @@ public final class PIDF {
             }
 
             if (kD != 0 && deltaTime != 0) {
-                /*double dDeltaTime = (SystemClock.uptimeMillis() - lastDTime) / 1000.0;
-                if (!periodAppliesOnlyToDTerm || dDeltaTime >= period) {
-                    double d = (error - lastError) / dDeltaTime;
-                    dComponent = kD * d;
-                    lastDTerm = dComponent;
-                    lastDTime = SystemClock.uptimeMillis();
-                } else {
-                    dComponent = lastDTerm;
-                }*/
                 double d = (error - lastError) / deltaTime;
                 dComponent = kD * d;
             }

@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.ftc9974.thorcore.control.math.Vector2;
+import org.ftc9974.thorcore.util.MathUtilities;
 
 import java.util.Locale;
 
@@ -68,31 +69,30 @@ public class OdometryKinematics {
             // the result of the first order kinematics is the same as the simpler zeroth order
             // kinematics. in fact, the first order kinematics actually won't work if the robot
             // isn't rotating due to a divide-by-zero.
-            RobotLog.vv(TAG, "zeroth order");
+            //RobotLog.vv(TAG, "zeroth order");
             return zerothOrder(
                     initialRobotState, finalRobotState,
                     initialAState, finalAState,
                     initialBState, finalBState
             );
-        } else if (initialRobotState.omega == finalRobotState.omega) {
+        } else if (initialRobotState.omega == finalRobotState.omega || initialRobotState.t == finalRobotState.t) {
             // this is a degenerate case of the second order kinematics. since angular velocity is
             // constant, the result of the first order kinematics is the same as that of the second
             // order kinematics.
-            RobotLog.vv(TAG, "first order");
+            //RobotLog.vv(TAG, "first order");
             return firstOrder(
                     initialRobotState, finalRobotState,
                     initialAState, finalAState,
                     initialBState, finalBState
             );
         } else {
-            /*
-            return secondOrder(
+            /*RobotLog.vv(TAG, "second order");
+            secondOrder(
                     initialRobotState, finalRobotState,
                     initialAState, finalAState,
                     initialBState, finalBState
-            );
-             */
-            RobotLog.vv(TAG, "\"second\" order");
+            );*/
+            //RobotLog.vv(TAG, "\"second\" order");
             // temporary
             return firstOrder(
                     initialRobotState, finalRobotState,
@@ -120,7 +120,7 @@ public class OdometryKinematics {
 
         Vector2 offsetA = Vector2.unitHeadingVector(initialRobotState.theta + initialAState.mu).scalarMultiply(translationalComponentA);
         Vector2 offsetB = Vector2.unitHeadingVector(initialRobotState.theta + initialBState.mu).scalarMultiply(translationalComponentB);
-        RobotLog.vv(TAG, "offsetA: %s offsetB: %s", offsetA.toString(), offsetB.toString());
+        //RobotLog.vv(TAG, "offsetA: %s offsetB: %s", offsetA.toString(), offsetB.toString());
         return offsetA.add(offsetB);
     }
 
@@ -137,7 +137,7 @@ public class OdometryKinematics {
                 firstOrderAntiderivative(deltaT, initialRobotState, initialBState),
                 firstOrderAntiderivative(0, initialRobotState, initialBState)
         );
-        RobotLog.vv(TAG, "offsetA: %s offsetB: %s", offsetA.toString(), offsetB.toString());
+        //RobotLog.vv(TAG, "offsetA: %s offsetB: %s", offsetA.toString(), offsetB.toString());
         return offsetA.add(offsetB);
     }
 
@@ -153,9 +153,9 @@ public class OdometryKinematics {
         // there is a degenerate case when initialRobotState.omega is 0. in this case, these
         // kinematics will return NaNs, but since the robot isn't spinning, the zeroth-order
         // kinematics may be used instead.
-        RobotLog.vv(TAG, "wheelHeading: %f initialOmega: %f initialTheta: %f", wheelHeading, initialRobotState.omega, initialRobotState.theta);
-        RobotLog.vv(TAG, "dBeta: %f initialDLambda: %f rotationCorr: %f", translationalVelocity, initialOdometerState.dLambda, initialRobotState.omega * initialOdometerState.circCoef);
-        RobotLog.vv(TAG, "x: %f y: %f", translationalVelocity * Math.sin(wheelHeading) / initialRobotState.omega, -translationalVelocity * Math.cos(wheelHeading) / initialRobotState.omega);
+        //RobotLog.vv(TAG, "wheelHeading: %f initialOmega: %f initialTheta: %f", wheelHeading, initialRobotState.omega, initialRobotState.theta);
+        //RobotLog.vv(TAG, "dBeta: %f initialDLambda: %f rotationCorr: %f", translationalVelocity, initialOdometerState.dLambda, initialRobotState.omega * initialOdometerState.circCoef);
+        //RobotLog.vv(TAG, "x: %f y: %f", translationalVelocity * Math.sin(wheelHeading) / initialRobotState.omega, -translationalVelocity * Math.cos(wheelHeading) / initialRobotState.omega);
         return new Vector2(
                 translationalVelocity * Math.sin(wheelHeading) / initialRobotState.omega,
                 -translationalVelocity * Math.cos(wheelHeading) / initialRobotState.omega
@@ -167,7 +167,9 @@ public class OdometryKinematics {
                                       OdometerState initialAState, OdometerState finalAState,
                                       OdometerState initialBState, OdometerState finalBState) {
         double deltaT = finalRobotState.t - initialRobotState.t;
-        Vector2 offsetA = Vector2.subtract(
+        Vector2 offsetA;
+        //if (initialAState.dLambda < finalAState.dLambda)
+        offsetA = Vector2.subtract(
                 secondOrderAntiderivative(
                         deltaT,
                         initialRobotState, finalRobotState,
@@ -206,8 +208,8 @@ public class OdometryKinematics {
         double odometerAcceleration = (finalOdometerState.dLambda - initialOdometerState.dLambda) / deltaTime;
         double angularAcceleration = (finalRobotState.omega - initialRobotState.omega) / deltaTime;
         // wheelHeading = ∫∫α dt = 0.5αt^2 + ωt + θ + μ
-        double wheelHeading = 0.5 * angularAcceleration * t * t + initialRobotState.omega * t + initialRobotState.theta + initialOdometerState.mu;
-        double translationalVelocity = (odometerAcceleration * t + initialOdometerState.dLambda) - (angularAcceleration * t + initialRobotState.omega) * initialOdometerState.circCoef;
+        //double wheelHeading = 0.5 * angularAcceleration * t * t + initialRobotState.omega * t + initialRobotState.theta + initialOdometerState.mu;
+        //double translationalVelocity = (odometerAcceleration * t + initialOdometerState.dLambda) - (angularAcceleration * t + initialRobotState.omega) * initialOdometerState.circCoef;
         // the full integral is a pain to solve (and write out), so here's Wolfram|Alpha solving just the x component:
         // https://www.wolframalpha.com/input/?i=integrate+%28a*t+%2B+v+-+%28alpha*t+%2B+omega%29c%29%28cos%281%2F2+*+alpha+*+t%5E2+%2B+omega+*+t+%2B+theta+%2B+mu%29%29+dt
         // where a = odometerAcceleration
@@ -216,11 +218,42 @@ public class OdometryKinematics {
         //       ω = initialRobotAngularVelocity
         //       θ = initialRobotHeading
         //       μ = odometerHeading
+        //       c = circCoef
         // when written out in plaintext, the x and y components of the antiderivative are:
         // x = (sqrt(α) (a - α c) sin(θ + μ + (α t^2)/2 + t ω) + sqrt(π) (α v - a ω) C((t α + ω)/(sqrt(π) sqrt(α))) cos(-ω^2/(2 α) + θ + μ) - sqrt(π) (α v - a ω) S((t α + ω)/(sqrt(π) sqrt(α))) sin(-ω^2/(2 α) + θ + μ))/α^(3/2)
         // y = (sqrt(α) (α c - a) cos(θ + μ + (α t^2)/2 + t ω) + sqrt(π) (α v - a ω) C((t α + ω)/(sqrt(π) sqrt(α))) sin(-ω^2/(2 α) + θ + μ) + sqrt(π) (α v - a ω) S((t α + ω)/(sqrt(π) sqrt(α))) cos(-ω^2/(2 α) + θ + μ))/α^(3/2)
         // where C(x) and S(x) are the cosine and sine Fresnel integrals, respectively.
-        // todo
-        return Vector2.ZERO;
+        double sqrtAlpha = Math.sqrt(angularAcceleration);
+        double fresnelParam = (t * angularAcceleration + initialRobotState.omega) / (MathUtilities.SQRT_PI * sqrtAlpha);
+        // θ + μ + (α t^2)/2 + t ω = 0.5 α t^2 + ω t + θ + μ
+        double wheelHeading = 0.5 * angularAcceleration * t * t + initialRobotState.omega * t + initialRobotState.theta + initialOdometerState.mu;
+        // -ω^2/(2 α) + θ + μ
+        double trigParam = -(initialRobotState.omega * initialRobotState.omega) / (2 * angularAcceleration) + initialRobotState.theta + initialOdometerState.mu;
+        // sqrt(π) (α v - a ω)
+        double fresnelCoef = MathUtilities.SQRT_PI * (angularAcceleration * initialOdometerState.dLambda - odometerAcceleration * initialRobotState.omega);
+        // sqrt(α) (a - α c)
+        double xTrigCoef = sqrtAlpha * (odometerAcceleration - angularAcceleration * initialOdometerState.circCoef);
+        // sqrt(α) (α c - a) = sqrt(α) (-a + α c) = -sqrt(α) (a - α c)
+        double yTrigCoef = -xTrigCoef;
+        // 1 / (α^(3/2)) = 1 / (sqrt(α) α) = sqrt(α) / (α^2)
+        double reciprocalAlphaCbSqrt = sqrtAlpha / (angularAcceleration * angularAcceleration);
+
+        double[] fresnel = MathUtilities.fresnelIntegral(fresnelParam);
+        double fresnelC = fresnel[0];
+        double fresnelS = fresnel[1];
+
+        double x = (xTrigCoef * Math.sin(wheelHeading) + fresnelCoef * (fresnelC * Math.cos(trigParam) - fresnelS * Math.sin(trigParam))) * reciprocalAlphaCbSqrt;
+        double y = (yTrigCoef * Math.cos(wheelHeading) + fresnelCoef * (fresnelC * Math.sin(trigParam) + fresnelS * Math.cos(trigParam))) * reciprocalAlphaCbSqrt;
+
+        //RobotLog.vv(TAG, "α: %f a: %f √α: %f fresnelParam: %f wheelHeading: %f trigParam: %f fresnelCoef: %f xTrigCoef: %f yTrigCoef: %f 1/(α^(3/2)): %f",
+        //        angularAcceleration, odometerAcceleration, sqrtAlpha, fresnelParam, wheelHeading, trigParam, fresnelCoef, xTrigCoef, yTrigCoef, reciprocalAlphaCbSqrt);
+
+        //RobotLog.vv(TAG, "fresnelC: %f fresnelS: %f x: %f y: %f", fresnelC, fresnelS, x, y);
+
+        return new Vector2(x, y);
+        /*return new Vector2(
+                (xTrigCoef * Math.sin(wheelHeading) + fresnelCoef * (fresnelC * Math.cos(trigParam) - fresnelS * Math.sin(trigParam))) * reciprocalAlphaCbSqrt,
+                (yTrigCoef * Math.cos(wheelHeading) + fresnelCoef * (fresnelC * Math.sin(trigParam) + fresnelS * Math.cos(trigParam))) * reciprocalAlphaCbSqrt
+        );*/
     }
 }

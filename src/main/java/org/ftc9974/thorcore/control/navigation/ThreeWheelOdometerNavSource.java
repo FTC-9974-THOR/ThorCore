@@ -18,10 +18,15 @@ public class ThreeWheelOdometerNavSource implements NavSource {
     private final double circCoefA, circCoefB, circCoefP;
     private final double parallelAHeading, parallelBHeading, perpendicularHeading;
 
+    // robot heading is relative to the initial heading of the robot
     private OdometryKinematics.RobotState previousRobotState;
     private OdometryKinematics.OdometerState previousAState, previousBState, previousPState;
 
+    // location of the robot in *field-relative* coordinates
     private Vector2 location;
+    // measure heading relative to
+    private double headingReference;
+    // offset between initial robot pose and field coordinates
     private double headingOffset;
 
     public ThreeWheelOdometerNavSource(OdometerWheel parallelA, OdometerWheel parallelB, OdometerWheel perpendicular) {
@@ -49,13 +54,18 @@ public class ThreeWheelOdometerNavSource implements NavSource {
         RobotLog.vv(TAG, "circCoefA: %f circCoefB: %f circCoefP: %f antiParallel: %s parallelHeading: %f perpendicularHeading: %f",
                 circCoefA, circCoefB, circCoefP, aAndBAreAntiParallel ? "true" : "false", parallelAHeading, perpendicularHeading);
 
-        parallelA.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        parallelB.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        perpendicular.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        //parallelA.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        //parallelB.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        //perpendicular.getConnectedModule().setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 
         location = Vector2.ZERO;
         headingOffset = 0;
+        headingReference = 0;
     }
+
+    // the odometer kinematics work in a coordinate system relative to the initial location and
+    // direction of the robot (the state of the robot when init() is called). the robot pose within
+    // this coordinate system is than transformed into the field-relative coordinate system.
 
     public void setLocation(final Vector2 location) {
         // location parameter is final to prevent outside code from changing this class's location
@@ -64,13 +74,11 @@ public class ThreeWheelOdometerNavSource implements NavSource {
     }
 
     public void setHeading(double heading) {
-        // heading = theta - headingOffset
-        // headingOffset = theta - heading
-        if (previousRobotState == null) {
-            headingOffset = -heading;
-        } else {
-            headingOffset = previousRobotState.theta - heading;
+        headingOffset = heading;
+        if (previousRobotState != null) {
+            headingReference = previousRobotState.theta;
         }
+        // headingOffset - headingReference = heading of kinematic system x axis in field relative system
     }
 
     private void init() {
@@ -118,10 +126,10 @@ public class ThreeWheelOdometerNavSource implements NavSource {
         previousPState.mu = perpendicularHeading;
         previousPState.direction = perpendicular.getCartesianDirectionOnRobot();
 
-        RobotLog.vv(TAG, "previousRobotState: %s", previousRobotState.toString());
-        RobotLog.vv(TAG, "previousAState: %s", previousAState.toString());
-        RobotLog.vv(TAG, "previousBState: %s", previousBState.toString());
-        RobotLog.vv(TAG, "previousPState: %s", previousPState.toString());
+        //RobotLog.vv(TAG, "previousRobotState: %s", previousRobotState.toString());
+        //RobotLog.vv(TAG, "previousAState: %s", previousAState.toString());
+        //RobotLog.vv(TAG, "previousBState: %s", previousBState.toString());
+        //RobotLog.vv(TAG, "previousPState: %s", previousPState.toString());
     }
 
     @Override
@@ -222,19 +230,31 @@ public class ThreeWheelOdometerNavSource implements NavSource {
         currentPState.mu = perpendicularHeading;
         currentPState.direction = perpendicular.getCartesianDirectionOnRobot();
 
-        RobotLog.vv(TAG, "Calculating positionDelta with parallelA and perpendicular");
+        /*
+        RobotLog.vv(TAG, "previousRobotState: %s", previousRobotState.toString());
+        RobotLog.vv(TAG, "currentRobotState: %s", currentRobotState.toString());
+        RobotLog.vv(TAG, "previousAState: %s", previousAState.toString());
+        RobotLog.vv(TAG, "currentAState: %s", currentAState.toString());
+        RobotLog.vv(TAG, "previousBState: %s", previousBState.toString());
+        RobotLog.vv(TAG, "currentBState: %s", currentBState.toString());
+        RobotLog.vv(TAG, "previousPState: %s", previousPState.toString());
+        RobotLog.vv(TAG, "currentPState: %s", currentPState.toString());
+         */
+
+        //RobotLog.vv(TAG, "Calculating positionDelta with parallelA and perpendicular");
         Vector2 positionDeltaA = OdometryKinematics.calculatePositionDelta(
                 previousRobotState, currentRobotState,
                 previousAState, currentAState,
                 previousPState, currentPState
         );
-        RobotLog.vv(TAG, "Calculating positionDelta with parallelB and perpendicular");
+        //RobotLog.vv(TAG, "Calculating positionDelta with parallelB and perpendicular");
         Vector2 positionDeltaB = OdometryKinematics.calculatePositionDelta(
                 previousRobotState, currentRobotState,
                 previousBState, currentBState,
                 previousPState, currentPState
         );
-        location = location.add(Vector2.lerp(positionDeltaA, positionDeltaB, 0.5));
+        // headingOffset - headingReference = heading of kinematic system x axis in field relative system
+        location = location.add(Vector2.lerp(positionDeltaA, positionDeltaB, 0.5).rotate(headingOffset - headingReference));
 
         previousRobotState = currentRobotState;
         previousAState = currentAState;
@@ -244,14 +264,17 @@ public class ThreeWheelOdometerNavSource implements NavSource {
 
     @Override
     public Vector2 getLocation() {
-        update();
+        if (previousRobotState == null) update();
         return location;
     }
 
     @Override
     public double getHeading() {
-        update();
-        return previousRobotState.theta - headingOffset;
+        if (previousRobotState == null) update();
+        return MathUtilities.wraparound(
+                (previousRobotState.theta - headingReference) + headingOffset,
+                -Math.PI, Math.PI
+        );
     }
 
     @Override
