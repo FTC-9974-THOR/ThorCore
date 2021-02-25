@@ -20,7 +20,7 @@ int8_t Link2USB::open(uint32_t arg)
     return -1;
 
   m_link = new USBLink();
-  res = m_link->open();
+  res = m_link->open(arg);
   if (res<0)
     return res;
   m_chirp = new Chirp(false, true);

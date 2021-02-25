@@ -33,13 +33,19 @@ USBLink::~USBLink()
     close();
 }
 
-int USBLink::open()
+// modified for Android
+int USBLink::open(uint32_t fd)
 {
     close();
 
+    // prevent libusb from scanning usb devices on libusb_init(). we don't actually "own" the USB
+    // bus, the Android OS does.
+    libusb_set_option(NULL, LIBUSB_OPTION_WEAK_AUTHORITY);
+    libusb_set_option(m_context, LIBUSB_OPTION_WEAK_AUTHORITY, NULL);
+
     libusb_init(&m_context);
 
-    return openDevice();
+    return openDevice(fd);
 }
 
 void USBLink::close()
@@ -56,6 +62,7 @@ void USBLink::close()
     }
 }
 
+/*
 int USBLink::openDevice()
 {
     libusb_device **list = NULL;
@@ -101,8 +108,45 @@ int USBLink::openDevice()
         return -1;
     return 0;
 }
+*/
 
-
+/**
+ * Opens a Pixy on an Android-owned USB file descriptor.
+ *
+ * @param fd file descriptor of the USB port the Pixy is on
+ * @returns 0 on success
+ * @returns LIBUSB_ERROR_NO_MEM on memory allocation failure
+ * @returns LIBUSB_ERROR_ACCESS on insufficient permissions
+ * @returns LIBUSB_ERROR_BUSY if something else is using the Pixy
+ * @returns LIBUSB_ERROR_NO_DEVICE if the Pixy becomes disconnected
+ *
+ */
+// modified for Android
+int USBLink::openDevice(uint32_t fd) {
+    // The Android system owns the USB devices, and we can only ask the OS to do USB operations.
+    // to do so, Android gives us a file descriptor we can do I/O operations on to perform USB read/writes.
+    // opening and closing of this device must be done by the Java layer. we can call libusb_close(),
+    // and in fact we should once we're done with the native handle, but we're not allowed to call
+    // libusb_open(). instead, we use libusb_wrap_sys_device() to open the file descriptor that Java
+    // gave us.
+    int retCode = libusb_wrap_sys_device(m_context, fd, &m_handle);
+    if (retCode == 0) {
+        retCode = libusb_set_configuration(m_handle, 1);
+        if (retCode < 0) {
+            libusb_close(m_handle);
+            m_handle = nullptr;
+            return retCode;
+        }
+        retCode = libusb_claim_interface(m_handle, 1);
+        if (retCode < 0) {
+            libusb_close(m_handle);
+            m_handle = nullptr;
+            return retCode;
+        }
+        return libusb_reset_device(m_handle);
+    }
+    return retCode;
+}
 
 int USBLink::send(const uint8_t *data, uint32_t len, uint16_t timeoutMs)
 {

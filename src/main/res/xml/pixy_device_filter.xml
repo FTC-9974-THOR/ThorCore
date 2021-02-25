@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <usb-device vendor-id="45484" product-id="61440"/> <!-- Pixy2 - vid: 0xb1ac pid: 0xf000 -->
+</resources>

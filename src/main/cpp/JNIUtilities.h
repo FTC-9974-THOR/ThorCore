@@ -22,4 +22,7 @@ jint throwIOException(JNIEnv* env, const std::string& message);
 jint throwNoSuchElementException(JNIEnv* env, const char* message);
 jint throwNoSuchElementException(JNIEnv* env, const std::string& msg);
 
+jint throwIllegalAccessError(JNIEnv* env, const char* message);
+jint throwIllegalAccessError(JNIEnv* env, const std::string& msg);
+
 #endif

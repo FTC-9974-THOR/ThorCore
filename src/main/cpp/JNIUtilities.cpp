@@ -49,3 +49,11 @@ jint throwNoSuchElementException(JNIEnv* env, const char* message) {
 jint throwNoSuchElementException(JNIEnv* env, const std::string& message) {
     return throwNoSuchElementException(env, message.c_str());
 }
+
+jint throwIllegalAccessError(JNIEnv* env, const char* message) {
+    return throwJNIException(env, "java/lang/IllegalAccessError", message);
+}
+
+jint throwIllegalAccessError(JNIEnv* env, const std::string& message) {
+    return throwIllegalAccessError(env, message.c_str());
+}

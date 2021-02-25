@@ -19,14 +19,13 @@
 #include "link.h"
 #include <libusb.h>
 
-
 class USBLink : public Link
 {
 public:
     USBLink();
     virtual ~USBLink();
 
-    int open();
+    int open(uint32_t fd);
     void close();
     virtual int send(const uint8_t *data, uint32_t len, uint16_t timeoutMs);
     virtual int receive(uint8_t *data, uint32_t len, uint16_t timeoutMs);
@@ -34,7 +33,7 @@ public:
     virtual uint32_t getTimer();
 
 private:
-    int openDevice();
+    int openDevice(uint32_t fd);
     libusb_context *m_context;
     libusb_device_handle *m_handle;
     uint32_t m_timer;

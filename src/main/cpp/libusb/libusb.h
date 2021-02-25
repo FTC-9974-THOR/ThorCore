@@ -25,6 +25,12 @@
 #ifndef LIBUSB_H
 #define LIBUSB_H
 
+#ifndef THORCORE_LOADED_MODULES
+#define THORCORE_LOADED_MODULES "libusb"
+#else
+#define THORCORE_LOADED_MODULES "libusb " + THORCORE_LOADED_MODULES
+#endif
+
 #if defined(_MSC_VER)
 /* on MS environments, the inline keyword is available in C++ only */
 #if !defined(__cplusplus)

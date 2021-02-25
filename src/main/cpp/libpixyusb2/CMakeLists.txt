@@ -20,7 +20,11 @@ set_target_properties(
         PROPERTIES
         COMPILE_FLAGS "-D__LINUX__"
 )
+if(NOT DEFINED ANDROID_LOG_LIB)
+    find_library(ANDROID_LOG_LIB log)
+endif()
 target_link_libraries(
         pixyusb2
+        ${ANDROID_LOG_LIB}
         libusb
 )
