@@ -1,6 +1,10 @@
 package org.ftc9974.thorcore.robot.sensors;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.hardware.usb.UsbDeviceConnection;
 import android.util.Size;
 
@@ -8,22 +12,29 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
+import org.ftc9974.thorcore.TransceiverDoubleBuffer;
 import org.ftc9974.thorcore.control.math.Vector2;
+import org.ftc9974.thorcore.util.OpModeUtilities;
 import org.ftc9974.thorcore.util.TimingUtilities;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOError;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Class for interfacing with a Pixy2 over USB.
@@ -65,7 +76,7 @@ import java.util.Locale;
  * @see Pixy2USBManager
  * @see org.ftc9974.thorcore.samples.SamplePixy2USB
  */
-public class Pixy2USB {
+public class Pixy2USB implements CameraStreamSource, OpModeManagerNotifier.Notifications {
 
     private static final String TAG = "Pixy2USB";
 
@@ -196,10 +207,17 @@ public class Pixy2USB {
 
     private final UsbDeviceConnection connection;
     private final int fileDescriptor;
+    private boolean connected, streaming;
+
+    private final TransceiverDoubleBuffer<Bitmap> bitmapBuffer;
+    private final AtomicBoolean alreadyProcessingBitmap;
 
     Pixy2USB(UsbDeviceConnection connection) {
         this.connection = connection;
         fileDescriptor = connection.getFileDescriptor();
+        bitmapBuffer = new TransceiverDoubleBuffer<>();
+        alreadyProcessingBitmap = new AtomicBoolean(false);
+        OpModeUtilities.registerListener(this);
     }
 
     void open() throws OutOfMemoryError, IllegalAccessError, IOException {
@@ -209,11 +227,20 @@ public class Pixy2USB {
         // blink the LED green to indicate successful connection
         setLED(Color.GREEN);
         TimingUtilities.runAfterDelay(() -> setLED(Color.BLACK), 200);
+
+        Size resolution = getResolution();
+        bitmapBuffer.set(Bitmap.createBitmap(resolution.getWidth(), resolution.getHeight(), Bitmap.Config.ARGB_8888));
+        bitmapBuffer.set(Bitmap.createBitmap(resolution.getWidth(), resolution.getHeight(), Bitmap.Config.ARGB_8888));
+
+        connected = true;
     }
 
     void close() {
+        connected = false;
+        stopCameraStream();
         nativeClose(fileDescriptor);
         connection.close();
+        OpModeUtilities.unregisterListener(this);
     }
 
     /**
@@ -416,6 +443,106 @@ public class Pixy2USB {
         return ret;
     }
 
+    // double buffers so only one frame is ever being processed
+    public @Nullable Bitmap getRawFrame() {
+        if (!alreadyProcessingBitmap.get()) {
+            alreadyProcessingBitmap.set(true);
+            // this has to be in little endian, because the native code copies a 32-bit int into the buffer.
+            // the Control Hub is a little-endian machine, so the byte order must match.
+            ByteBuffer outputBuffer = ByteBuffer.allocateDirect(bitmapBuffer.get().getByteCount()).order(ByteOrder.LITTLE_ENDIAN);
+            try {
+                nativeGetFrame(fileDescriptor, outputBuffer);
+            } catch (IOException e) {
+                RobotLog.ee(TAG, e, "IOException while getting raw frame: %s", e.getMessage());
+                return null;
+            } catch (IndexOutOfBoundsException e) {
+                // buffer size mismatch
+                RobotLog.ee(TAG, e, "Internal error while getting raw frame: %s", e.getMessage());
+                return null;
+            }
+
+            Bitmap freshBitmap;
+            // make sure we don't flip the buffers while someone else is using them
+            synchronized (bitmapBuffer) {
+                bitmapBuffer.forceFlip();
+                freshBitmap = bitmapBuffer.get();
+                bitmapBuffer.forceFlip();
+            }
+
+            // copy into the inactive side of the buffer
+            freshBitmap.copyPixelsFromBuffer(outputBuffer);
+            // and then make that the active side
+            bitmapBuffer.forceFlip();
+            alreadyProcessingBitmap.set(false);
+
+            outputBuffer = null;
+            System.gc();
+
+            return bitmapBuffer.get();
+        } else {
+            synchronized (bitmapBuffer) {
+                return bitmapBuffer.get();
+            }
+        }
+    }
+
+    public void startCameraStream() {
+        CameraStreamServer.getInstance().setSource(this);
+        streaming = true;
+    }
+
+    public void stopCameraStream() {
+        if (streaming) {
+            CameraStreamServer.getInstance().setSource(null);
+            streaming = false;
+        }
+    }
+
+    @Override
+    public void getFrameBitmap(Continuation<? extends Consumer<Bitmap>> continuation) {
+        continuation.dispatch((consumer) -> {
+            Bitmap bitmap = getRawFrame();
+            // draw hud
+            List<Block> blocks = getBlocks();
+            synchronized (bitmapBuffer) {
+                if (blocks != null) {
+                    Canvas canvas = new Canvas(bitmap);
+                    Paint paint = new Paint();
+                    paint.setColor(Color.WHITE);
+                    paint.setStrokeWidth(4);
+                    paint.setStyle(Paint.Style.STROKE);
+                    for (Block block : blocks) {
+                        int left = (int) (block.position.getX() - 0.5 * block.size.getWidth());
+                        int bottom = (int) (block.position.getY() + 0.5 * block.size.getHeight());
+                        canvas.drawRect(new Rect(
+                                left,
+                                (int) (block.position.getY() - 0.5 * block.size.getHeight()),
+                                (int) (block.position.getX() + 0.5 * block.size.getWidth()),
+                                bottom
+                        ), paint);
+                        canvas.drawText(String.format(Locale.getDefault(), "Sig: %d", block.signature), left, bottom + 10, paint);
+                    }
+                }
+                consumer.accept(bitmap);
+            }
+        });
+    }
+
+    @Override
+    public void onOpModePreInit(OpMode opMode) {
+
+    }
+
+    @Override
+    public void onOpModePreStart(OpMode opMode) {
+
+    }
+
+    @Override
+    public void onOpModePostStop(OpMode opMode) {
+        stopCameraStream();
+    }
+
     // each Java instance of Pixy2USB has a native counterpart, and they identify themselves by
     // their device ID when going back and forth across the JNI boundary. this is a somewhat inelegant
     // solution, as it requires having 2 registries (one in Java, one in C++). however, doing it this
@@ -431,4 +558,6 @@ public class Pixy2USB {
     private static native Size nativeGetResolution(int fileDescriptor);
 
     private static native Block[] nativeGetCCCBlocks(int fileDescriptor) throws IOException;
+
+    private static native void nativeGetFrame(int fileDescriptor, ByteBuffer outputBuffer) throws IOException;
 }

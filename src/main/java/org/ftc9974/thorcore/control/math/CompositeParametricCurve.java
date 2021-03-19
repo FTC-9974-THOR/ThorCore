@@ -2,55 +2,105 @@ package org.ftc9974.thorcore.control.math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * Defines a piecewise {@link ParametricCurve} by stitching together multiple ParametricCurves.
+ *
+ * First and second derivatives take the chain rule into account.
+ */
 public class CompositeParametricCurve extends ParametricCurve {
 
+    /**
+     * All of the constituent curves that make up this CompositeParametricCurve.
+     *
+     * The get(), derivative(), and secondDerivative() methods will likely need random-access
+     * to the segment list, so an ArrayList is used.
+     */
     private final ArrayList<ParametricCurve> segments;
 
+    /**
+     * Constructs a new CompositeParametricCurve from the supplied constituent curves.
+     *
+     * The constituent curves are added in the order they were supplied.
+     *
+     * @param curveSegments segments of the new curve
+     */
     public CompositeParametricCurve(ParametricCurve... curveSegments) {
         segments = new ArrayList<>(Arrays.asList(curveSegments));
-
-        // make sure that the curve is contiguous - that is, each curve ends at the same point that
-        // the next one begins. note that this does not check for continuity - a curve can have
-        // sharp turns and still be contiguous.
-        /*Iterator<ParametricCurve> iterator = segments.iterator();
-        ParametricCurve previousCurve = iterator.next();
-        while (iterator.hasNext()) {
-            ParametricCurve currentCurve = iterator.next();
-            if (!previousCurve.get(1).equals(currentCurve.get(0))) {
-                throw new IllegalArgumentException(String.format(
-                        "The curve is not contiguous, jumping from %s to %s.",
-                        previousCurve.get(1).toString(), currentCurve.get(0).toString()
-                ));
-            }
-            previousCurve = currentCurve;
-        }*/
     }
 
+    /**
+     * Gets the position of the curve at the specified parameter.
+     *
+     * The t-value range is split into equal segments for each segment in this curve. For example,
+     * a CompositeParametricCurve with 2 segments will split the t-value range into 2 segments:
+     * [0, 0.5) and [0.5, 1]. 3 segments will have the ranges [0, 0.33), [0.33, 0.66), [0.66, 1].
+     * Note the difference between the bounds of the ranges. The start of a range is inclusive, and
+     * the end is exclusive - with the exception of the last range, whose end is inclusive.
+     *
+     * The range that the supplied value of t falls in determines which curve segment is used. For
+     * example, if the t-value falls in the first range the first segment is used. If it falls in
+     * the third range, the third segment is used. The t-value is scaled back to the range [0, 1]
+     * and passed to the segment. The returned position of the curve is then returned.
+     *
+     * @param t curve parameter
+     * @return position
+     */
     @Override
     public Vector2 get(double t) {
+        // calculate which range the t-value falls in.
         int segmentIndex = (int) Math.floor(t * getNumSegments());
-        // if t is exactly 1, then segmentIndex will be equal to getNumSegments().
+        // if t is exactly 1, then segmentIndex will be equal to getNumSegments(). this would cause
+        // an index-out-of-bounds, so decrement segmentIndex in that case.
         if (segmentIndex == getNumSegments()) {
             segmentIndex--;
         }
 
         // u is the parameter to the curve at segmentIndex.
+        // we multiply be the number of segments to put t in the range [0, numSegments]. we then
+        // subtract our segment index. if our segmentIndex was determined properly, this yields a
+        // value from 0 to 1. This effectively is mapping t from
+        // [segmentIndex / numSegments, (segmentIndex + 1) / numSegments] to [0, 1].
         double u = t * getNumSegments() - segmentIndex;
 
+        // evaluate the segment and return the result.
         return segments.get(segmentIndex).get(u);
     }
 
+    /**
+     * Gets the first derivative of the curve at the specified parameter.
+     *
+     * The t-value range is split into equal segments for each segment in this curve. For example,
+     * a CompositeParametricCurve with 2 segments will split the t-value range into 2 segments:
+     * [0, 0.5) and [0.5, 1]. 3 segments will have the ranges [0, 0.33), [0.33, 0.66), [0.66, 1].
+     * Note the difference between the bounds of the ranges. The start of a range is inclusive, and
+     * the end is exclusive - with the exception of the last range, whose end is inclusive.
+     *
+     * The range that the supplied value of t falls in determines which curve segment is used. For
+     * example, if the t-value falls in the first range the first segment is used. If it falls in
+     * the third range, the third segment is used. The t-value is scaled back to the range [0, 1]
+     * and passed to the segment. The returned first derivative of the curve is then returned.
+     *
+     * @param t curve parameter
+     * @return first derivative
+     */
     @Override
     public Vector2 derivative(double t) {
+        // calculate which range the t-value falls in.
         int segmentIndex = (int) Math.floor(t * getNumSegments());
-        // if t is exactly 1, then segmentIndex will be equal to getNumSegments().
+        // if t is exactly 1, then segmentIndex will be equal to getNumSegments(). this would cause
+        // an index-out-of-bounds, so decrement segmentIndex in that case.
         if (segmentIndex == getNumSegments()) {
             segmentIndex--;
         }
 
         // u is the parameter to the curve at segmentIndex.
+        // we multiply be the number of segments to put t in the range [0, numSegments]. we then
+        // subtract our segment index. if our segmentIndex was determined properly, this yields a
+        // value from 0 to 1. This effectively is mapping t from
+        // [segmentIndex / numSegments, (segmentIndex + 1) / numSegments] to [0, 1].
         double u = t * getNumSegments() - segmentIndex;
 
         // this method (CompositeParametricCurve.derivative()) must return the derivative of get()
@@ -62,23 +112,55 @@ public class CompositeParametricCurve extends ParametricCurve {
         return segments.get(segmentIndex).derivative(u).scalarMultiply(getNumSegments());
     }
 
+    /**
+     * Gets the second derivative of the curve at the specified parameter.
+     *
+     * The t-value range is split into equal segments for each segment in this curve. For example,
+     * a CompositeParametricCurve with 2 segments will split the t-value range into 2 segments:
+     * [0, 0.5) and [0.5, 1]. 3 segments will have the ranges [0, 0.33), [0.33, 0.66), [0.66, 1].
+     * Note the difference between the bounds of the ranges. The start of a range is inclusive, and
+     * the end is exclusive - with the exception of the last range, whose end is inclusive.
+     *
+     * The range that the supplied value of t falls in determines which curve segment is used. For
+     * example, if the t-value falls in the first range the first segment is used. If it falls in
+     * the third range, the third segment is used. The t-value is scaled back to the range [0, 1]
+     * and passed to the segment. The returned second derivative of the curve is then returned.
+     *
+     * @param t curve parameter
+     * @return second derivative
+     */
     @Override
     public Vector2 secondDerivative(double t) {
+        // calculate which range the t-value falls in.
         int segmentIndex = (int) Math.floor(t * getNumSegments());
-        // if t is exactly 1, then segmentIndex will be equal to getNumSegments().
+        // if t is exactly 1, then segmentIndex will be equal to getNumSegments(). this would cause
+        // an index-out-of-bounds, so decrement segmentIndex in that case.
         if (segmentIndex == getNumSegments()) {
             segmentIndex--;
         }
 
         // u is the parameter to the curve at segmentIndex.
+        // we multiply be the number of segments to put t in the range [0, numSegments]. we then
+        // subtract our segment index. if our segmentIndex was determined properly, this yields a
+        // value from 0 to 1. This effectively is mapping t from
+        // [segmentIndex / numSegments, (segmentIndex + 1) / numSegments] to [0, 1].
         double u = t * getNumSegments() - segmentIndex;
 
         // as with derivative(), the chain rule must be applied.
         return segments.get(segmentIndex).secondDerivative(u).scalarMultiply(getNumSegments() * getNumSegments());
     }
 
+    /**
+     * Finds the point on this curve closest to the supplied point.
+     *
+     * @param p point to project onto the curve
+     * @return closest point
+     */
     @Override
     public ClosestPoint findPointClosestTo(Vector2 p) {
+        // iterate through the each segment, finding the closest point on each. the closest of those
+        // points is the closest point overall.
+
         int closestSegmentIndex = 0;
         ClosestPoint closestPoint = segments.get(0).findPointClosestTo(p);
         for (int i = 1; i < getNumSegments(); i++) {
@@ -99,6 +181,14 @@ public class CompositeParametricCurve extends ParametricCurve {
         );
     }
 
+    /**
+     * Finds the point on this curve on the specified range closest to the specified point.
+     *
+     * @param p point to project onto the curve
+     * @param start lower bound of the curve parameter
+     * @param end upper bound of the curve parameter
+     * @return closest point that lies on the curve at a t-value between the start and end parameters.
+     */
     @Override
     public ClosestPoint findPointClosestTo(Vector2 p, double start, double end) {
         int startSegmentIndex = (int) Math.floor(start * getNumSegments());

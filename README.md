@@ -4,23 +4,44 @@ and more. Additionally, it provides navigation systems and development tools.
 
 This is the dev branch. Code here may be unfinished or operating incorrectly.
 
-### Note: the rest of this document is outdated. It needs to be updated to reflect SDK changes.
 
 #### Installation
-To install, start up a terminal.
+To install, clone ThorCore into your Android Studio project. The ThorCore folder should be in the
+top-level directory, alongside ```FtcRobotController``` and ```TeamCode```.
+For example, if the project was in ```/home/thor/ftc/FtcRobotController```:
+```bash
+thor@thor:~$ cd /home/thor/ftc/FtcRobotController
+thor@thor:~/ftc/FtcRobotController$ git clone -b dev https://github.com/FTC-9974-THOR/ThorCore.git
 ```
-thor@thor:~$
+Start up Android Studio and open the project. In ```settings.gradle```, add the following line at the
+start of the file:
+```gradle
+include ':ThorCore'
 ```
-Clone the ThorCore repo.
-```
-thor@thor:~$ git clone https://github.com/FTC-9974-THOR/ThorCore
-```
-Start up Android Studio. Select ```File > New > Import module...``` and
-enter the directory you cloned ThorCore to. If everything worked right,
-you should be able to run a Gradle sync without errors.
+In ```build.common.gradle```, change ```minSdkVersion``` and the Java compile options:
+```gradle
+...
+android {
+    ...
+    defaultConfig {
+        ...
+        minSdkVersion 25
+        ...
+    }
 
+    ...
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    ...
+}
+...
+```
 Last, you need to include ThorCore as a dependency. Open
-TeamCode/build.gradle and put the following code at the end:
+```TeamCode/build.gradle``` and put the following code at the end:
 ```gradle
 dependencies {
     implementation project(':ThorCore')
@@ -33,7 +54,11 @@ android {
     }
  }
  ```
-Run a Gradle sync, and you should be all set.
+
+Run a Gradle sync, and you should be all set. Android Studio should automatically download and install
+the NDK and CMake, but you can download them manually from the SDK Manager if necessary.
+
+### Note: the rest of this document is outdated. It needs to be updated to reflect SDK changes.
 
 #### Features
 * PIDs
@@ -51,6 +76,6 @@ Primary documentation is in-code Javadocs. There is also sample code
 available [here](https://github.com/FTC-9974-THOR/ThorCore/tree/master/src/main/java/org/ftc9974/thorcore/samples), with more samples coming soon.
 
 ***
-For additional information, submit an issue or pm /u/ardx_zero on Reddit.
+For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.2*
+*ThorCore v0.3*

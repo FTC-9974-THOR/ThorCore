@@ -4,14 +4,8 @@ cmake_minimum_required(VERSION 3.4.1)
 enable_language(ASM)
 
 set(NATIVE_ROOT src/main/cpp)
+set(ASM_ROOT src/main/asm)
 set(OUTPUT_DIR lib/${ANDROID_ABI})
-
-# there's got to be a cleaner way to do this that i'm just unaware of
-if(${ANDROID_ABI} STREQUAL "arm64-v8a")
-    set(USE_NEON_ACCEL true)
-else()
-    set(USE_NEON_ACCEL false)
-endif()
 
 add_subdirectory(
         # path to libusb source (and the buildscript)
@@ -36,35 +30,41 @@ add_library(
         SHARED
         ${NATIVE_ROOT}/JNIPixy2USB.cpp
         ${NATIVE_ROOT}/JNIUtilities.cpp
-        ${NATIVE_ROOT}/JNINEONVision.cpp
+        ${ASM_ROOT}/neon/NEONCore.s
         ${NATIVE_ROOT}/ThorCore.cpp
 )
-if(${USE_NEON_ACCEL})
-    target_sources(
-            ThorCore
-            PRIVATE
-            ${NATIVE_ROOT}/NEONVision.s
-    )
-else()
-    target_sources(
-            ThorCore
-            PRIVATE
-            ${NATIVE_ROOT}/NEONVisionStubs.s
-    )
-endif()
+set_source_files_properties(
+        ${ASM_ROOT}/JNI.s
+        ${ASM_ROOT}/neon/NEONCore.s
+        ${ASM_ROOT}/neon/NEONVision-arm64.s
+        ${ASM_ROOT}/neon/NEONVision-arm32.s
+        ${ASM_ROOT}/neon/NEONVisionStubs.s
+        PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp"
+)
+
+#if(${USE_NEON_ACCEL})
+#    target_sources(
+#            ThorCore
+#            PRIVATE
+#            ${NATIVE_ROOT}/NEONVision.s
+#    )
+#    set_source_files_properties(${NATIVE_ROOT}/NEONVision.s PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
+#else()
+#    target_sources(
+#            ThorCore
+#            PRIVATE
+#            ${NATIVE_ROOT}/NEONVisionStubs.s
+#    )
+#endif()
+
 target_include_directories(
         ThorCore
-        PRIVATE ${NATIVE_ROOT}
+        PRIVATE ${NATIVE_ROOT} ${ASM_ROOT}
 )
 set_target_properties(
         ThorCore
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY
         ${OUTPUT_DIR}
-)
-target_compile_definitions(
-        ThorCore
-        PRIVATE
-        -DUSE_NEON_ACCEL=${USE_NEON_ACCEL}
 )
 target_compile_options(
         ThorCore

@@ -20,9 +20,12 @@ jint throwIOException(JNIEnv* env, const char* message);
 jint throwIOException(JNIEnv* env, const std::string& message);
 
 jint throwNoSuchElementException(JNIEnv* env, const char* message);
-jint throwNoSuchElementException(JNIEnv* env, const std::string& msg);
+jint throwNoSuchElementException(JNIEnv* env, const std::string& message);
 
 jint throwIllegalAccessError(JNIEnv* env, const char* message);
-jint throwIllegalAccessError(JNIEnv* env, const std::string& msg);
+jint throwIllegalAccessError(JNIEnv* env, const std::string& message);
+
+jint throwIndexOutOfBoundsException(JNIEnv* env, const char* message);
+jint throwIndexOutOfBoundsException(JNIEnv* env, const std::string& message);
 
 #endif

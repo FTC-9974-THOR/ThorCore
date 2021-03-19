@@ -48,11 +48,28 @@ public class SamplePixy2USB extends OpMode {
         for (Pixy2USB p : Pixy2USBManager.getConnectedPixies()) {
             if (pixy == null) {
                 pixy = p;
+                pixy.setProgram(Pixy2USB.Program.VIDEO);
+                pixy.startCameraStream();
             }
             telemetry.addLine("Pixy:<br/>")
                     .addData("Version", p.getVersion())
                     .addData("Resolution", p.getResolution())
                     .addData("Serial ID", p.getSerial());
+        }
+
+        if (pixy != null) {
+            telemetry.addLine("Blocks:");
+            List<Pixy2USB.Block> blocks = pixy.getBlocks();
+            if (blocks == null) return;
+            for (Pixy2USB.Block block : blocks) {
+                telemetry.addLine("Block:<br/>")
+                        .addData("Position", block.position)
+                        .addData("Angle", block.angle)
+                        .addData("Size", block.size)
+                        .addData("Tracking ID", block.trackingIndex)
+                        .addData("Signature ID", block.signature)
+                        .addData("Age", block.age);
+            }
         }
     }
 

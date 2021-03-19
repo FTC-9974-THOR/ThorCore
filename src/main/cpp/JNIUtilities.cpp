@@ -57,3 +57,11 @@ jint throwIllegalAccessError(JNIEnv* env, const char* message) {
 jint throwIllegalAccessError(JNIEnv* env, const std::string& message) {
     return throwIllegalAccessError(env, message.c_str());
 }
+
+jint throwIndexOutOfBoundsException(JNIEnv* env, const char* message) {
+    return throwJNIException(env, "java/lang/IndexOutOfBoundsException", message);
+}
+
+jint throwIndexOutOfBoundsException(JNIEnv* env, const std::string& message) {
+    return throwIndexOutOfBoundsException(env, message.c_str());
+}

@@ -3,7 +3,7 @@ package org.ftc9974.thorcore.control.math;
 import java.util.Arrays;
 
 /**
- * Implements matrix math. I'm not quite sure if the multiplication methods work properly, though.
+ * Work-in-progress: Implements matrix math.
  */
 public final class Matrix {
 

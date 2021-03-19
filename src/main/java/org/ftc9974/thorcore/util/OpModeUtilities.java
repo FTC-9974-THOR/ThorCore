@@ -1,15 +1,9 @@
 package org.ftc9974.thorcore.util;
 
-import com.qualcomm.ftccommon.FtcEventLoop;
-import com.qualcomm.ftccommon.configuration.RobotConfigFile;
-import com.qualcomm.ftccommon.configuration.RobotConfigFileManager;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-
-import java.util.List;
-import java.util.Locale;
 
 public final class OpModeUtilities {
 

@@ -16,6 +16,10 @@ import org.ftc9974.thorcore.util.MathUtilities;
  */
 public abstract class ParametricCurve {
 
+    /**
+     * Class for holding data returned by a closest-point search. The default implementation calculates
+     * most of these anyways, and these values will likely be useful for the caller.
+     */
     public static class ClosestPoint {
         public final Vector2 point, firstDeriv, secondDeriv, pToPoint;
         public final double t, accurateTo;
@@ -125,7 +129,9 @@ public abstract class ParametricCurve {
      *         specified point
      */
     public ClosestPoint findPointClosestTo(Vector2 p, @FloatRange(from = 0, to = 1) double start, @FloatRange(from = 0, to = 1) double end, int samples, int iterations) {
+        // t stores the closest point that we have found as of yet
         double t = 0;
+        // margin is the range plus or minus t that we will search for a new closest point
         double margin = 1;
         final double initialStart = start, initialEnd = end;
         for (int i = 1; i <= iterations; i++) {
@@ -143,7 +149,9 @@ public abstract class ParametricCurve {
                 if (dot > 0) break;
             }
             // decrease the margin so the next scanned area is the 2 adjacent areas that were scanned
-            // in the previous iteration.
+            // in the previous iteration. each successive iteration needs to look at 1/samples of the
+            // range of the previous iteration. we can write a closed-form solution of it by taking
+            // samples to the negative i-th power, where i is the current iteration number.
             margin = Math.pow(samples, -i);
             // calculate a new range, created by placing a margin around the (current) closest point.
             start = MathUtilities.constrain(t - margin, initialStart, initialEnd);
@@ -152,6 +160,7 @@ public abstract class ParametricCurve {
         Vector2 curvePoint = get(t);
         Vector2 firstDeriv = derivative(t);
         double accurateTo = 0;
+        // if start == end, there's only one point, with perfect accuracy.
         if (t != start && t != end) {
             // calculate the distance to which this point is accurate to
             accurateTo = (margin / samples) * firstDeriv.getMagnitude();
@@ -159,18 +168,38 @@ public abstract class ParametricCurve {
         return new ClosestPoint(curvePoint, firstDeriv, secondDerivative(t), curvePoint.subtract(p), t, accurateTo);
     }
 
+    /**
+     * Looks for the closest point on this curve to the specified point on the specified range.
+     *
+     * @param p a point in space, to which this method finds the closest point on this curve
+     * @param start the minimum t-value (curve parameter) to be considered
+     * @param end the maximum t-value (curve parameter) to be considered
+     * @param samples the number of points to check on the range
+     * @return t-value of the closest point
+     */
     protected double minimizeDistOnRange(Vector2 p, double start, double end, int samples) {
+        // if the range is degenerate, there's only one point that is valid.
         if (start == end) return start;
+
+        // minDistanceSq and closestT store the as-of-yet closest distance and t-value.
         double minDistanceSq = Double.POSITIVE_INFINITY;
         double closestT = 0;
+        // iterate through the range of t-values from start to end
         for (double t = start, dt = (end - start) / (double) samples; t < end + dt; t += dt) {
+            // currently considered t-value
             double consT = MathUtilities.constrain(t, start, end);
+            // calculate the squared distance. since squaring is a one-to-one monotonic increasing
+            // function, we don't have to take the square root to compare distance. on embedded systems,
+            // taking the square root can be a tad expensive, so we avoid it for the sake of performance.
             double distSq = p.subtract(get(consT)).getMagnitudeSq();
+            // if this distance is less than the closest distance we've seen yet, we've found a new
+            // closest point. record this new distance and t-value.
             if (distSq < minDistanceSq) {
                 minDistanceSq = distSq;
                 closestT = consT;
             }
         }
+
         return closestT;
     }
 
@@ -185,6 +214,9 @@ public abstract class ParametricCurve {
 
     /**
      * Gets the length of a segment of this curve.
+     *
+     * Note that the default implementation can be expensive. Subclasses may implement closed-form
+     * solutions with significantly better performance, but the default implementation isn't very fast.
      *
      * @param start parameter at the start of the segment
      * @param end parameter at the end of the segment

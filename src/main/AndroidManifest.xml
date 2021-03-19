@@ -1,9 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.ftc9974.thorcore">
     <uses-permission android:name="org.firstinspires.ftc.ftdi.permission" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <!-- so apparently the FTC SDK will merge all manifest files, so I can just piggyback off the main application here -->
-    <application>
+    <application android:largeHeap="true">
         <receiver android:name=".robot.sensors.Pixy2USBManager">
             <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/pixy_device_filter" />

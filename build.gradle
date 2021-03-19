@@ -22,38 +22,6 @@ android {
         }
     }
 
-    sourceSets {
-        main {
-            java {
-                srcDirs "src/main/java"
-            }
-
-            res {
-                srcDirs "src/main/res"
-            }
-
-            jni {
-                srcDirs "src/main/cpp"
-            }
-        }
-
-        androidTest {
-            java {
-                srcDirs "src/androidTest/java"
-            }
-        }
-
-        test {
-            java {
-                srcDirs "src/test/java"
-            }
-
-            res {
-                srcDirs "src/test/resources"
-            }
-        }
-    }
-
     buildTypes {
         release {
             minifyEnabled false

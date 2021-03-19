@@ -5,6 +5,8 @@
 #include <android/log.h>
 #include <jni.h>
 
+// this #define doesn't work and is bad practice
+// todo change this to a static std::vector or similar
 #ifndef THORCORE_LOADED_MODULES
 #define THORCORE_LOADED_MODULES "ThorCore"
 #else
