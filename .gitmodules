@@ -1,3 +1,6 @@
 [submodule "src/main/cpp/fmt"]
 	path = src/main/cpp/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "src/main/cpp/libusb"]
+	path = src/main/cpp/libusb
+	url = https://github.com/FTC-9974-THOR/libusb.git
