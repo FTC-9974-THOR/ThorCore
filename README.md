@@ -12,6 +12,8 @@ For example, if the project was in ```/home/thor/ftc/FtcRobotController```:
 ```bash
 thor@thor:~$ cd /home/thor/ftc/FtcRobotController
 thor@thor:~/ftc/FtcRobotController$ git clone -b dev https://github.com/FTC-9974-THOR/ThorCore.git
+thor@thor:~/ftc/FtcRobotController$ cd ThorCore
+thor@thor:~/ftc/FtcRobotController/ThorCore$ git submodule update --init --recursive
 ```
 Start up Android Studio and open the project. In ```settings.gradle```, add the following line at the
 start of the file:
