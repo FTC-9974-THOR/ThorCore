@@ -2,7 +2,7 @@ package org.ftc9974.thorcore;
 
 import junit.framework.Assert;
 
-import org.ftc9974.thorcore.control.math.Matrix;
+import org.ftc9974.thorcore.control.math.OldMatrix;
 import org.junit.Test;
 
 public class MatrixTests {
@@ -28,11 +28,11 @@ public class MatrixTests {
 
     @Test
     public void test_equals() {
-        Matrix mat1 = new Matrix(new double[][]{
+        OldMatrix mat1 = new OldMatrix(new double[][]{
                 {1, 2, 3},
                 {4, 5, 6}
         });
-        Matrix mat2 = new Matrix(new double[][]{
+        OldMatrix mat2 = new OldMatrix(new double[][]{
                 {1, 2, 3},
                 {5, 5, 6}
         });
@@ -41,17 +41,17 @@ public class MatrixTests {
 
     @Test
     public void test_addition() {
-        Matrix mat1 = new Matrix(new double[][]{
+        OldMatrix mat1 = new OldMatrix(new double[][]{
                 {1, 2, 3},
                 {1, 2, 3}
         });
-        Matrix mat2 = new Matrix(new double[][]{
+        OldMatrix mat2 = new OldMatrix(new double[][]{
                 {2, 3, 4},
                 {2, 3, 4}
         });
 
-        Matrix result = Matrix.add(mat1, mat2);
-        Matrix expected = new Matrix(new double[][]{
+        OldMatrix result = OldMatrix.add(mat1, mat2);
+        OldMatrix expected = new OldMatrix(new double[][]{
                 {3, 5, 7},
                 {3, 5, 7}
         });
@@ -63,12 +63,12 @@ public class MatrixTests {
     @Test
     public void test_scalarMultiplication() {
         double scalar = 2;
-        Matrix mat = new Matrix(new double[][]{
+        OldMatrix mat = new OldMatrix(new double[][]{
                 {1, 2, 3},
                 {4, 5, 6}
         });
-        Matrix result = Matrix.multiply(scalar, mat);
-        Matrix expected = new Matrix(new double[][]{
+        OldMatrix result = OldMatrix.multiply(scalar, mat);
+        OldMatrix expected = new OldMatrix(new double[][]{
                 {2, 4, 6},
                 {8, 10, 12}
         });
@@ -79,13 +79,13 @@ public class MatrixTests {
     public void test_navigation() {
         final double ax = 1, az = 1, ar = 1, Rw = 2, Lw = 6, Ww = 6;
         double m = 1.0 / (Rw * ax);
-        Matrix fk = new Matrix(new double[][] {
+        OldMatrix fk = new OldMatrix(new double[][] {
                 {1, 1 / ar, -(Lw + Ww) / az},
                 {1, -1 / ar, (Lw + Ww) / az},
                 {1, -1 / ar, (Lw + Ww) / az},
                 {1, 1 / ar, -(Lw + Ww) / az}
         });
-        Matrix input = new Matrix(new double[][] {
+        OldMatrix input = new OldMatrix(new double[][] {
                 {1},
                 {0},
                 {0}
@@ -94,10 +94,10 @@ public class MatrixTests {
         System.out.println();
         printWithLabel("Input", input.toString());
         System.out.println();
-        Matrix intermediate = Matrix.multiply(m, fk);
+        OldMatrix intermediate = OldMatrix.multiply(m, fk);
         printWithLabel("INT", intermediate.toString());
         System.out.println();
-        Matrix result = Matrix.multiply(intermediate, input);
+        OldMatrix result = OldMatrix.multiply(intermediate, input);
         printWithLabel("RES", result.toString());
     }
 }

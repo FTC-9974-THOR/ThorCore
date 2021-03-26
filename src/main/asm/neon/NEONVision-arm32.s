@@ -1,3 +1,8 @@
+## NEONVision file for 32-bit ARM processors (armv7-a). At the moment, NEONVision is not supported
+## on this architecture. armv7-a doesn't require all processors to have NEON, and those that do are
+## significantly weaker than the 64-bit version.
+## right now, all methods are just stubs.
+
 #include "JNI.s"
 
     .arch armv7-a
