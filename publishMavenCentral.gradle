@@ -1,0 +1,7 @@
+apply from: "publish.gradle"
+
+afterEvaluate {
+    publishing.repositories {
+        mavenCentral()
+    }
+}

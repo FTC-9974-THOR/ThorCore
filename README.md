@@ -1,13 +1,23 @@
 # ThorCore
-ThorCore is a library for FTC. It implements common drivetrains, PIDF controllers, 2D Vector math,
-and more. Additionally, it provides navigation systems and development tools.
+ThorCore is a library for FTC. It provides implementations for common drivetrains, vector mathematics,
+closed-loop controllers, vision systems, and sensors.
 
 This is the dev branch. Code here may be unfinished or operating incorrectly.
 
-
-#### Installation
-To install, clone ThorCore into your Android Studio project. The ThorCore folder should be in the
-top-level directory, alongside ```FtcRobotController``` and ```TeamCode```.
+### Installation
+There are 2 ways to install ThorCore.
+#### Packaged Binary
+Download the latest .aar file from the Releases page. Copy it into the ```libs``` folder in your
+robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
+the dependencies block, add the following line:
+```gradle
+implementation name: "thorcore", version: "0.4+", ext: "aar"
+```
+Run a Gradle sync, and it should be all set.
+#### From Source
+Clone ThorCore into your Android Studio project. The ThorCore folder should be in the
+top-level directory, alongside ```FtcRobotController``` and ```TeamCode```. Make sure you include
+git submodules in the cloning process.
 For example, if the project was in ```/home/thor/ftc/FtcRobotController```:
 ```bash
 thor@thor:~$ cd /home/thor/ftc/FtcRobotController
@@ -20,64 +30,29 @@ start of the file:
 ```gradle
 include ':ThorCore'
 ```
-In ```build.common.gradle```, change ```minSdkVersion``` and the Java compile options:
+In ```TeamCode/build.gradle```, insert the following at the end of the file:
 ```gradle
-...
 android {
-    ...
-    defaultConfig {
-        ...
-        minSdkVersion 25
-        ...
-    }
-
-    ...
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    ...
+    defaultConfig.minSdkVersion 25
+    compileOptions.sourceCompatibility JavaVersion.VERSION_1_8
+    compileOptions.targetCompatibility JavaVersion.VERSION_1_8
 }
-...
-```
-Last, you need to include ThorCore as a dependency. Open
-```TeamCode/build.gradle``` and put the following code at the end:
-```gradle
+
 dependencies {
     implementation project(':ThorCore')
 }
-
-android {
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
- }
- ```
+```
 
 Run a Gradle sync, and you should be all set. Android Studio should automatically download and install
-the NDK and CMake, but you can download them manually from the SDK Manager if necessary.
+the NDK and CMake, but you can download them manually from the SDK Manager if necessary. ThorCore is
+built and tested with NDK version 21.1.6352462 and CMake 3.10.2, but it should work with any recent
+version of the NDK and CMake. The FTC SDK uses NDK version 21.3.6528147 by default, which should work
+just as well.
 
-### Note: the rest of this document is outdated. It needs to be updated to reflect SDK changes.
-
-#### Features
-* PIDs
-* The [Realizer](https://github.com/FTC-9974-THOR/ThorCore/tree/master/src/main/java/org/ftc9974/thorcore/meta/Realizer.java) -
-  a clean, reflection-based way of initializing hardware.
-* Pre-made implementations of drivetrains
-* The [Navigator](https://github.com/FTC-9974-THOR/ThorCore/tree/master/src/main/java/org/ftc9974/thorcore/control/Navigator.java) -
-  autonomous navigation with field-relative coordinates
-* The [TFDetector](https://github.com/FTC-9974-THOR/ThorCore/tree/master/src/main/java/org/ftc9974/thorcore/control/TFDetector.java) -
-  Tensorflow, packaged into a neat little class
-* The Telepathy API - a more powerful form of telemetry, with an [open source client](https://github.com/FTC-9974-THOR/TelepathyClient) that runs on a computer
-
-#### Documentation
-Primary documentation is in-code Javadocs. There is also sample code
-available [here](https://github.com/FTC-9974-THOR/ThorCore/tree/master/src/main/java/org/ftc9974/thorcore/samples), with more samples coming soon.
+### Licensing
+ThorCore is published under a modified MIT license. The exact licensing terms can be found in LICENSE.md.
 
 ***
 For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.3*
+*ThorCore v0.4*

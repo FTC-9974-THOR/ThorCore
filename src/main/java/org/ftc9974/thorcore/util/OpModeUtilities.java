@@ -1,14 +1,14 @@
 package org.ftc9974.thorcore.util;
 
+import android.app.Activity;
 
-import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 public final class OpModeUtilities {
 
-    public static FtcRobotControllerActivity getRootActivity() {
-        return (FtcRobotControllerActivity) AppUtil.getInstance().getRootActivity();
+    public static Activity getRootActivity() {
+        return AppUtil.getInstance().getRootActivity();
     }
 
     public static OpModeManagerImpl getOpModeManager() {

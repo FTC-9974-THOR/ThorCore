@@ -1,0 +1,82 @@
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+// thanks to https://stackoverflow.com/a/42160584
+task javadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    android.libraryVariants.all { variant ->
+        if (variant.name == "release") {
+            owner.classpath += variant.javaCompileProvider.get().classpath
+        }
+    }
+    exclude "**/R.html", "**/R.*.html", "**/index.html"
+}
+
+task javadocsJar(type: Jar) {
+    archiveClassifier.set("javadoc")
+    from javadocs.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+    archiveClassifier.set("sources")
+    from android.sourceSets.main.java.srcDirs
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            ThorCore(MavenPublication) {
+                from components.release
+
+                groupId = "io.github.ftc-9974-thor"
+                artifactId = "thorcore"
+                version = android.defaultConfig.versionName
+
+                //artifact javadocsJar
+                //artifact sourcesJar
+                //artifact("$buildDir/outputs/aar/ThorCore-release.aar")
+
+                pom {
+                    name = "ThorCore"
+                    description = "FTC Team 9974 T.H.O.R.'s framework for FIRST Tech Challenge"
+                    url = "https://github.com/FTC-9974-THOR/ThorCore"
+
+                    licenses {
+                        license {
+                            name = "ThorCore Modified MIT License"
+                            url = "https://github.com/FTC-9974-THOR/ThorCore/LICENSE.md"
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            name = "Chris J"
+                            email = "fortraan1221@gmail.com"
+                            organization = "FTC Team 9974 T.H.O.R."
+                            organizationUrl = "https://github.com/FTC-9974-THOR"
+                        }
+                    }
+
+                    scm {
+                        connection = "scm:git:git://github.com/FTC-9974-THOR/ThorCore.git"
+                        developerConnection = "scm:git:git://github.com/FTC-9974-THOR/ThorCore.git"
+                        url = "https://github.com/FTC-9974-THOR/ThorCore"
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "BuildLocal"
+                url = "$buildDir/repos"
+            }
+        }
+    }
+    publish.dependsOn(build)
+
+    signing {
+        sign configurations.archives
+    }
+}

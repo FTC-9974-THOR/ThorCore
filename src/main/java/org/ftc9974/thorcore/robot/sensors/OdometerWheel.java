@@ -28,7 +28,7 @@ public class OdometerWheel {
      * Constructs a new OdometerWheel.
      *
      * locationOnRobot and direction must be in frame space. For more information on frame space,
-     * see the docs for {@link org.ftc9974.thorcore.util.MathUtilities#frameToCartesian(Vector2)}.
+     * see the docs for {@link MathUtilities#frameToCartesian(Vector2)}.
      *
      * @param motor the DcMotorEx corresponding to motor port the odometer encoder is plugged into
      * @param wheelDiameter diameter of the wheel, in millimeters

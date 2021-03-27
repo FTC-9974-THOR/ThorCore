@@ -128,7 +128,7 @@ public class LineSegment extends ParametricCurve {
                 end
         );
         Vector2 closestPoint = get(t), pToClosestPoint = closestPoint.subtract(p);
-        return new ParametricCurve.ClosestPoint(
+        return new ClosestPoint(
                 closestPoint, derivative(t), secondDerivative(t),
                 pToClosestPoint, t, 0
         );

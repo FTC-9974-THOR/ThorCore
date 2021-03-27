@@ -78,7 +78,7 @@ public final class TankDrive2Wheel {
 
     /**
      * Sets the zero power behaviour of the motors.
-     * @see com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior
+     * @see DcMotor.ZeroPowerBehavior
      *
      * @param behaviour behaviour
      */
