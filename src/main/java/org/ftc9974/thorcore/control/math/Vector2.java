@@ -8,7 +8,7 @@ import java.util.Locale;
 /**
  * Utility class for doing 2D vector math.
  * Implements Euclidean vector operations in a regular Cartesian coordinate system
- * (+x -> right, +y -> up, heading of 0 -> right, heading increases counterclockwise)
+ * (+x = right, +y = up, heading of 0 = right, heading increases counterclockwise)
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Vector2 {
@@ -31,7 +31,7 @@ public final class Vector2 {
     /**
      * Gets the value of the specified axis.
      *
-     * @param axis 0 -> x, 1 -> y
+     * @param axis 0 = x, 1 = y
      * @return the value
      */
     @Deprecated
@@ -66,7 +66,7 @@ public final class Vector2 {
     /**
      * Sets the value of the specified axis.
      *
-     * @param axis 0 -> x, 1 -> y
+     * @param axis 0 = x, 1 = y
      * @param value value
      */
     @Deprecated

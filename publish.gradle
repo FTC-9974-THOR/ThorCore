@@ -14,6 +14,7 @@ task javadocs(type: Javadoc) {
 }
 
 task javadocsJar(type: Jar) {
+    dependsOn(javadocs)
     archiveClassifier.set("javadoc")
     from javadocs.destinationDir
 }
@@ -33,8 +34,8 @@ afterEvaluate {
                 artifactId = "thorcore"
                 version = android.defaultConfig.versionName
 
-                //artifact javadocsJar
-                //artifact sourcesJar
+                artifact javadocsJar
+                artifact sourcesJar
                 //artifact("$buildDir/outputs/aar/ThorCore-release.aar")
 
                 pom {

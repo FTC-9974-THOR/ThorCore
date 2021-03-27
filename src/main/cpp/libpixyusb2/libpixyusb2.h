@@ -16,12 +16,6 @@
 #ifndef _LIBPIXYUSB2_H
 #define _LIBPIXYUSB2_H
 
-#ifndef THORCORE_LOADED_MODULES
-#define THORCORE_LOADED_MODULES "libpixyusb2"
-#else
-#define THORCORE_LOADED_MODULES "libpixyusb2 " + THORCORE_LOADED_MODULES
-#endif
-
 #include <stdio.h>
 #include "chirp.hpp"
 

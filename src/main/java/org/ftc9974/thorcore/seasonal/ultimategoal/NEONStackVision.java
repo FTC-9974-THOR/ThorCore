@@ -31,6 +31,12 @@ import java.io.IOException;
  * While it is possible to use this kind of algorithm with RGB images, that would require converting
  * to YUV, which would incur a severe performance loss.
  *
+ * The algorithm doesn't need to know where in the frame the stack is. It only needs to know how much
+ * of the frame a four stack should take up. This means that as long as the stack is completely within
+ * frame and roughly a constant distance away, it doesn't matter where in the frame it is. In fact,
+ * the rings don't even have to be in a stack. They could be placed side-by-side, and the algorithm
+ * can still count the rings properly.
+ *
  * The algorithm works as follows:
  * <ol>
  *     <li>Capture a frame from the camera. This frame must be in YUY2 format. Since the USB Camera

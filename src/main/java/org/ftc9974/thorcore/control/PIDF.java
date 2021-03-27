@@ -18,7 +18,7 @@ import java.util.function.DoubleSupplier;
  *
  * To use, construct a new instance with {@link #PIDF(double, double, double, double)}.
  *
- * If you are using a phone with an Android API level >= 24, you can bind functions as input
+ * If you are using a phone with an Android API level higher than 24, you can bind functions as input
  * and output, much like WPILib.
  *
  * Input function:

@@ -36,7 +36,7 @@ public final class Realizer {
      * The ThorCore naming convention is as follows:
      * [All capital letters and numbers in class name]-[variable name]
      * Some examples:
-     * <table border="1">
+     * <table border="1" summary="Naming convention">
      *     <tr>
      *         <td><b>Class name</b></td><td><b>Variable name</b></td><td><b>Name</b></td>
      *     </tr>

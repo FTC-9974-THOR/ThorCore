@@ -66,11 +66,11 @@ set_target_properties(
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY
         ${OUTPUT_DIR}
 )
-target_compile_options(
-        ThorCore
-        PRIVATE
-        --verbose
-)
+#target_compile_options(
+#        ThorCore
+#        PRIVATE
+#        --verbose
+#)
 
 if(NOT DEFINED ANDROID_LOG_LIB)
     find_library(ANDROID_LOG_LIB, log)
