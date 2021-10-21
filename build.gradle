@@ -1,11 +1,12 @@
 apply plugin: "com.android.library"
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 25
-        targetSdkVersion 27
+        //noinspection ExpiredTargetSdkVersion
+        targetSdkVersion 28
         versionName "0.4"
         // version code is the version name with dots and leading zeros removed
         versionCode android.defaultConfig.versionName.replaceAll("(\\.)|(^0+)", "").toInteger()
@@ -66,11 +67,13 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     //implementation project(':FtcRobotController')
-    implementation 'org.firstinspires.ftc:RobotCore:6.2.1'
-    implementation 'org.firstinspires.ftc:Hardware:6.2.1'
-    implementation 'org.firstinspires.ftc:FtcCommon:6.2.1'
-    implementation "org.apache.commons:commons-lang3:3.9"
+    implementation 'org.firstinspires.ftc:RobotCore:7.0.0'
+    implementation 'org.firstinspires.ftc:Hardware:7.0.0'
+    implementation 'org.firstinspires.ftc:FtcCommon:7.0.0'
+    implementation 'org.apache.commons:commons-lang3:3.9'
+
     testImplementation 'junit:junit:4.12'
+
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 

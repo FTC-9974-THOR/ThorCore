@@ -29,11 +29,16 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
     private Velocity velocity;
     private Acceleration acceleration;
 
-    private int axis;
+    private final int axis;
 
     private static final boolean rotationRequired = false;
 
     private boolean isFallback;
+
+    /**
+     * Flag for inverting the heading coming from the IMU.
+     */
+    private boolean inverted;
 
     public IMUNavSource(HardwareMap hardwareMap) {
         this(hardwareMap, 3, null);
@@ -78,6 +83,19 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
         return isFallback;
     }
 
+    /**
+     * Set whether or not heading values are inverted.
+     *
+     * @param inverted true to invert, false to not invert
+     */
+    public void setInverted(boolean inverted) {
+        this.inverted = inverted;
+    }
+
+    public boolean isInverted() {
+        return inverted;
+    }
+
     @Override
     public Vector2 getLocation() {
         return new Vector2(position.x, position.y);
@@ -87,16 +105,21 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
     // important, the IMU might not be a good choice.
     @Override
     public double getHeading() {
+        double ret;
         Orientation orientation = getOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.XYZ);
         switch (axis) {
             case 1:
-                return orientation.firstAngle;
+                ret = orientation.firstAngle;
+                break;
             case 2:
-                return orientation.secondAngle;
+                ret = orientation.secondAngle;
+                break;
             case 3:
             default:
-                return orientation.thirdAngle;
+                ret = orientation.thirdAngle;
+                break;
         }
+        return (inverted) ? -ret : ret;
     }
 
     @Override

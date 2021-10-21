@@ -20,6 +20,7 @@ MARK_FUNCTION(vision_NEONVision_processYUY2ForDisplay)
 #elif __aarch64__
 ## armv8-a, aka arm64-v8a
 #include "neon/NEONVision-arm64.s"
+#include "neon/NEONVisionROI-arm64.s"
 #else
 ## armv7-a, aka armeabi-v7a. currently not supported for NEONVision.
 #include "neon/NEONVision-arm32.s"
