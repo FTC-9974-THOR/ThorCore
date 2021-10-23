@@ -55,4 +55,4 @@ ThorCore is published under a modified MIT license. The exact licensing terms ca
 ***
 For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.4*
+*ThorCore v0.4.1*

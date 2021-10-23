@@ -13,6 +13,10 @@ EXPORT_SYMBOL(vision_NEONVision_processYUY2)
 MARK_FUNCTION(vision_NEONVision_processYUY2)
 EXPORT_SYMBOL(vision_NEONVision_processYUY2ForDisplay)
 MARK_FUNCTION(vision_NEONVision_processYUY2ForDisplay)
+EXPORT_SYMBOL(vision_NEONVision_processYUY2WithMask)
+MARK_FUNCTION(vision_NEONVision_processYUY2WithMask)
+EXPORT_SYMBOL(vision_NEONVision_processYUY2WithMaskForDisplay)
+MARK_FUNCTION(vision_NEONVision_processYUY2WithMaskForDisplay)
 
 #ifndef __ARM_NEON
 ## if we don't have NEON, it doesn't matter what architecture it is.
@@ -20,7 +24,7 @@ MARK_FUNCTION(vision_NEONVision_processYUY2ForDisplay)
 #elif __aarch64__
 ## armv8-a, aka arm64-v8a
 #include "neon/NEONVision-arm64.s"
-#include "neon/NEONVisionROI-arm64.s"
+#include "neon/NEONVisionMask-arm64.s"
 #else
 ## armv7-a, aka armeabi-v7a. currently not supported for NEONVision.
 #include "neon/NEONVision-arm32.s"

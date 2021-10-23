@@ -1,21 +1,7 @@
 #include "JNI.s"
-
-    ## indicate that this is executable code, stored in its own section of .text
     .section .text.neonvision, "ax", @progbits
-    ## indicate that this will be running on armv8-a (or, as Android calls it, arm64-v8a)
     .arch armv8-a
-    ## the Rev Control Hub uses an ARM Cortex A53 (specifically, it uses an RK3328, which has an A53
-    ## embedded in it), so have the compiler optimize for that processor
     .cpu cortex-a53
-
-    ## Java signature: static boolean supportsNeonAcceleration()
-    ## args:
-    ## JNIEnv* env -> x0
-    ## jclass cls -> x1
-JNI_EXPAND(vision_NEONVision_supportsNeonAcceleration):
-    ## return true
-    mov x0, #1
-    ret
 
     ## Counts the number of pixels in an image that match the given YUV threshold.
     ##
@@ -49,7 +35,10 @@ JNI_EXPAND(vision_NEONVision_supportsNeonAcceleration):
     ##                       the hexidecimal color in #YYUUVV order.
     ## long lowColor -> x5: low threshold, in YUV, encoded into a 64-bit integer in the same fashion
     ##                      as highColor.
-JNI_EXPAND(vision_NEONVision_processYUY2):
+    ## byte* maskPtr -> x6: pointer to the mask buffer. every pixel in the input image must have a
+    ##                      corresponding element in the mask. if a pixel matches the color bounds,
+    ##                      the corresponding value in the mask is added to the accumulator.
+JNI_EXPAND(vision_NEONVision_processYUY2WithMask):
 ## USB webcams seem to use the Rec. 601 color space (BT.601). In BT.601, luminace (Y) ranges from
 ## 16 (black) to 235 (white). U and V are unsigned, with neutral color centered around 128. That being
 ## said, the behaviour i've seen in testing doesn't quite match BT.601 - namely, YUV of (0, 0, 0) is
@@ -107,12 +96,23 @@ JNI_EXPAND(vision_NEONVision_processYUY2):
 #define Vlow v29.16b
 
 ## accumulator for pixel count
-#define acc v30
-## register view of the low 8 bytes of the accumulator register
-#define accScalar d30
+#define acc x10
+
+## weights from the mask
+#define Y0weights v8.16b
+#define Y1weights v9.16b
+## pointer to the current mask block
+#define maskPtr x9
 
     ## push stack frame
     stp x29, x30, [sp, #-16]!
+    ## save v8 and v9, as AAPCS64 requires they be callee-saved
+    stp q8, q9, [sp, #-32]!
+    ## save x9 and x10
+    stp x9, x10, [sp, #-16]!
+
+    ## save the pointer to the mask into maskPtr.
+    mov maskPtr, x6
 
     ## prefetch the first block of pixels. on the Cortex A53, cache lines are 64 bytes wide. since
     ## 64 is evenly divisible by 4 (the size in bytes of YUY2 macropixels), it makes a convenient
@@ -120,6 +120,8 @@ JNI_EXPAND(vision_NEONVision_processYUY2):
     ## that we can use a PRFM instruction to load a block, starting at bufferPtr.
     ## specifically, load bufferPtr into the L1 cache for streaming.
     prfm PLDL1STRM, [bufferPtr]
+    ## load the first mask block
+    prfm PLDL1STRM, [maskPtr]
 
     ## clear x6 for use during threshold loading. XOR'ing x6 with itself is functionally equivalent
     ## to mov x6, #0. in some cases, this can even be faster than mov - at least on x86 processors.
@@ -159,23 +161,27 @@ JNI_EXPAND(vision_NEONVision_processYUY2):
     ## copy that to Ylow
     dup Ylow, w6
 
-    ## clear all bits in acc
-    movi acc.2d, #0
+    ## set acc to zero
+    eor acc, acc, acc
 
     ## store a pointer to the end of the buffer
     add bufferEnd, bufferPtr, bufferLen
 
-processYUY2_loop:
+processYUY2Mask_loop:
     ## make sure we're not at the end of the buffer (bufferPtr >= bufferEnd)
     cmp bufferPtr, bufferEnd
-    b.ge processYUY2_done
+    b.ge processYUY2Mask_done
 
     ## ask the memory controller to load the block we'll be processing after the current one
     prfm PLDL1STRM, [bufferPtr, #64]
+    ## also load the next mask block.
+    prfm PLDL1STRM, [maskPtr, #32]
 
     ## load the block, deinterlacing into Y0, U0, Y1, and V0.
     ## post-increments bufferPtr by 64
     ld4 {Y0, U0, Y1, V0}, [bufferPtr], #64
+    ## load the mask block, deinterlacing into Y0weights and Y1weights.
+    ld2 {Y0weights, Y1weights}, [maskPtr], #32
 
     ## compare pixel data to high thresholds, checking if each threshold is greater than or equal to
     ## the pixel data. the result of each channel's comparison is stored into the channel's corresponding
@@ -210,38 +216,47 @@ processYUY2_loop:
 
     ## store Y0cmp (Y0highCmp && Y0lowCmp) into v4.
     and v4.16b, Y0highCmp, Y0lowCmp
+    ## apply Y0weights to Y0
+    and v4.16b, v4.16b, Y0weights
 
     ## store Y1cmp (Y1highCmp && Y1lowCmp) into v5.
     and v5.16b, Y1highCmp, Y1lowCmp
+    ## apply Y1Weights to Y1
+    and v5.16b, v5.16b, Y1weights
 
-    ## cmhs sets or clears all bits in the output register. we want to count the number of pixels that
-    ## match, so we only need one bit from each comparison, which we can then add together. we can shift
-    ## each luminance comparison right 7 bits, leaving only the top bit set.
-    ushr v4.16b, v4.16b, #7
-    ushr v5.16b, v5.16b, #7
-    ## acc = (Y0cmp + Y1cmp) && (UVcmp)
-    ## add together Y0cmp and Y1cmp, storing the result in v4
-    add v4.16b, v4.16b, v5.16b
-    ## AND that with UVcmp. since UVcmp is the same for both pixels in the macropixel, we can add
-    ## Y0cmp and Y1cmp, then AND with UVcmp, instead of ANDing twice and adding. this saves an instruction.
+    ## acc += Y0cmp && UVcmp + Y1cmp && UVcmp
+    ## since we're using signed arithmetic, we need to handle this a bit differently than the non-mask
+    ## version of NEONVision. if we were to just add Y0cmp and Y1cmp, we run the risk of
+    ## overflowing and getting the wrong sum. so we add across the 2 vectors and add them to acc
+    ## separately.
+    ## AND together Y0cmp and UVcmp, placing the result in v4
     and v4.16b, v4.16b, v6.16b
-    ## add across v4 to find the number of pixels in this block that match the threshold, and store it
-    ## in the lowest byte of v7.
-    addv b7, v4.16b
-    ## move the intermediate sum from v7 to the 8th byte of the accumulator.
-    mov acc.B[8], v7.B[0]
-    ## the accumulator can then be reinterpreted as 2 64-bit integers, with the running accumulator
-    ## in the lower half and the intermediate sum in the top half. add across the vector to add the
-    ## intermediate sum to the running accumulator.
-    addp accScalar, acc.2d
+    ## add across v4, placing the result in the lowest halfword of v7
+    saddlv h7, v4.16b
+    ## sign extend into x7
+    smov x7, v7.H[0]
+    ## add to the accumulator
+    add acc, acc, x7
+    ## AND together Y1cmp and UVcmp, placing the result in v5
+    and v5.16b, v5.16b, v6.16b
+    ## add across v5
+    saddlv h7, v5.16b
+    ## sign extend into x7
+    smov x7, v7.H[0]
+    ## add to the accumulator
+    add acc, acc, x7
 
     ## continue the loop
-    b processYUY2_loop
+    b processYUY2Mask_loop
 
-processYUY2_done:
+processYUY2Mask_done:
     ## move the running accumulator to x0 for returning
-    umov x0, acc.D[0]
+    mov x0, acc
 
+    ## restore x9 and x10
+    ldp x9, x10, [sp], #16
+    ## restore v8 and v9
+    ldp q8, q9, [sp], #32
     ## pop stack frame
     ldp x29, x30, [sp], #16
 
@@ -271,10 +286,11 @@ processYUY2_done:
 #undef Vlow
 #undef acc
 #undef accScalar
+#undef Y0weights
+#undef Y1weights
+#undef maskPtr
 
-    ## see the comments for processYUY2. this method does the same thing, but it overwrites pixels
-    ## in the image buffer that do not match the threshold.
-JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
+JNI_EXPAND(vision_NEONVision_processYUY2WithMaskForDisplay):
 ## USB webcams seem to use the Rec. 601 color space (BT.601). In BT.601, luminace (Y) ranges from
 ## 16 (black) to 235 (white). U and V are unsigned, with neutral color centered around 128. That being
 ## said, the behaviour i've seen in testing doesn't quite match BT.601 - namely, YUV of (0, 0, 0) is
@@ -289,12 +305,6 @@ JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
 #define lowColor x5
 ## pointer to the memory address immediately after the end of the buffer.
 #define bufferEnd x6
-## Y value for the mask color
-#define maskY w9
-## U value for the mask color
-#define maskU w10
-## V value for the mask color
-#define maskV w11
 
 ## Y0 channel of the current pixel block.
 #define Y0 v0.16b
@@ -338,12 +348,25 @@ JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
 #define Vlow v29.16b
 
 ## accumulator for pixel count
-#define acc v30
-## register view of the low 8 bytes of the accumulator register
-#define accScalar d30
+#define acc x10
+
+## weights from the mask
+#define Y0weights v8.16b
+#define Y1weights v10.16b
+## pointer to the current mask block
+#define maskPtr x9
 
     ## push stack frame
     stp x29, x30, [sp, #-16]!
+    ## save v8 and v9, as AAPCS64 requires they be callee-saved
+    stp q8, q9, [sp, #-32]!
+    ## save v10 and v11
+    stp q10, q11, [sp, #-32]!
+    ## save x9 and x10
+    stp x9, x10, [sp, #-16]!
+
+    ## save the pointer to the mask into maskPtr.
+    mov maskPtr, x6
 
     ## prefetch the first block of pixels. on the Cortex A53, cache lines are 64 bytes wide. since
     ## 64 is evenly divisible by 4 (the size in bytes of YUY2 macropixels), it makes a convenient
@@ -351,6 +374,8 @@ JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
     ## that we can use a PRFM instruction to load a block, starting at bufferPtr.
     ## specifically, load bufferPtr into the L1 cache for streaming.
     prfm PLDL1STRM, [bufferPtr]
+    ## load the first mask block
+    prfm PLDL1STRM, [maskPtr]
 
     ## clear x6 for use during threshold loading. XOR'ing x6 with itself is functionally equivalent
     ## to mov x6, #0. in some cases, this can even be faster than mov - at least on x86 processors.
@@ -365,7 +390,7 @@ JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
     ## bits, so we load in VUY order.
     ## put bits 0-7 of highColor in x6
     and x6, x7, highColor
-    ## copy that to Vhigh
+    ## copy that to every byte in the Vhigh register
     dup Vhigh, w6
     ## put bits 8-15 of highColor in x6
     and x6, x7, highColor, LSR #8
@@ -390,37 +415,55 @@ JNI_EXPAND(vision_NEONVision_processYUY2ForDisplay):
     ## copy that to Ylow
     dup Ylow, w6
 
-    ## prefill mask color. any pixel in the image buffer that doesn't match the threshold will be
-    ## overwritten with this color. (16, 128, 128) is pure black.
-    mov maskY, #16
-    mov maskU, #128
-    mov maskV, #128
+    ## set acc to zero
+    eor acc, acc, acc
 
-    ## clear all bits in acc
-    movi acc.2d, #0
+    ## preload write-back U0 and V0 with 128
+    movi v9.16b, #128
+    movi v11.16b, #128
 
     ## store a pointer to the end of the buffer
     add bufferEnd, bufferPtr, bufferLen
 
-processYUY2ForDisplay_loop:
-    ## check if we're at or past the end of the buffer.
+processYUY2MaskForDisplay_loop:
+    ## make sure we're not at the end of the buffer (bufferPtr >= bufferEnd)
     cmp bufferPtr, bufferEnd
-    ## if we are, break the loop.
-    b.ge processYUY2ForDisplay_done
+    b.ge processYUY2MaskForDisplay_done
 
-    ## prefetch the block *after* the current one.
+    ## ask the memory controller to load the block we'll be processing after the current one. this
+    ## also prevents a cache miss if bufferPtr is not 64-byte aligned, as it'll force the entirety
+    ## of the current block to load along with the next block.
     prfm PLDL1STRM, [bufferPtr, #64]
+    ## also load the next mask block.
+    prfm PLDL1STRM, [maskPtr, #32]
 
-    ## load the block into Y0, U0, Y1, and V0.
+    ## load the block, deinterlacing into Y0, U0, Y1, and V0.
+    ## we don't increment the bufferPtr here, since we'll do that during write-back.
     ld4 {Y0, U0, Y1, V0}, [bufferPtr]
 
-    ## compare pixels to high thresholds, checking if high >= pixel.
+    ## tell the cache controller we'll be writing back to bufferPtr soon
+    prfm PSTL1STRM, [bufferPtr]
+
+    ## load the mask block, deinterlacing into v16 and v17. those are typically used for storing
+    ## Y0highCmp and U0highCmp, so we can overwrite them, as we're going to be storing new values in
+    ## them soon anyways. we can't load directly into Y0weights and Y1weights because Load-Structure
+    ## instructions require the SIMD registers to be sequential.
+    ld2 {Y0highCmp, U0highCmp}, [maskPtr], #32
+    ## move mask values into their correct registers
+    mov Y0weights, Y0highCmp
+    mov Y1weights, U0highCmp
+
+    ## compare pixel data to high thresholds, checking if each threshold is greater than or equal to
+    ## the pixel data. the result of each channel's comparison is stored into the channel's corresponding
+    ## highCmp register.
     cmhs Y0highCmp, Yhigh, Y0
     cmhs U0highCmp, Uhigh, U0
     cmhs Y1highCmp, Yhigh, Y1
     cmhs V0highCmp, Vhigh, V0
 
-    ## compare pixels to low values, checking if pixel >= low.
+    ## compare pixels to low thresholds, checking if each pixel value is greater than or equal to the
+    ## low threshold. the result of each channel's comparison is stored into the channel's corresponding
+    ## lowCmp register.
     cmhs Y0lowCmp, Y0, Ylow
     cmhs U0lowCmp, U0, Ulow
     cmhs Y1lowCmp, Y1, Ylow
@@ -436,61 +479,68 @@ processYUY2ForDisplay_loop:
     ## Y0cmp = Y0highCmp && Y0lowCmp
     ## Y1cmp = Y1highCmp && Y1lowCmp
 
-    ## UVcmp -> v6
+    ## AND together U0highCmp, U0lowCmp, V0highCmp, and V0lowCmp into v6.
     and v6.16b, U0highCmp, U0lowCmp
     and v7.16b, V0highCmp, V0lowCmp
     and v6.16b, v6.16b, v7.16b
 
-    ## Y0cmp -> v4
+    ## store Y0cmp (Y0highCmp && Y0lowCmp) into v4.
     and v4.16b, Y0highCmp, Y0lowCmp
+    ## apply Y0weights to Y0cmp
+    and v4.16b, v4.16b, Y0weights
 
-    ## Y1cmp -> v5
+    ## store Y1cmp (Y1highCmp && Y1lowCmp) into v5.
     and v5.16b, Y1highCmp, Y1lowCmp
+    ## apply Y1Weights to Y1cmp
+    and v5.16b, v5.16b, Y1weights
 
-    ## masking logic
-    ## fill mask color register with maskY
-    dup v31.16b, maskY
-    ## v7 = Y0cmp && UVcmp
-    and v7.16b, v4.16b, v6.16b
-    ## insert mask values into Y0 if pixel 0 doesn't match
-    bif Y0, v31.16b, v7.16b
-    ## v7 = Y1cmp && UVcmp
-    and v7.16b, v5.16b, v6.16b
-    ## insert mask values into Y1 if pixel 1 doesn't match
-    bif Y1, v31.16b, v7.16b
-    ## fill mask color register with maskU
-    dup v31.16b, maskU
-    ## insert mask values into U0 if UVcmp is false
-    bif U0, v31.16b, v6.16b
-    ## fill mask color register with maskV
-    dup v31.16b, maskV
-    ## insert mask values into V0 if UVcmp is false
-    bif V0, v31.16b, v6.16b
+    ## write-back logic: v8-v11 are used to write back to the image buffer.
+    ## Y0 -> v8
+    ## U0 -> v9
+    ## Y1 -> v10
+    ## V0 -> v11
+    ## this is done so they can be written back with a single st4 instruction. Store-Structure
+    ## instructions require the registers they use to be sequential. this register layout allows us
+    ## to write back to the buffer without needing to shuffle data between registers.
 
-    ## store the pixel data back into the buffer, post-incrementing bufferPtr by 64
-    st4 {Y0, U0, Y1, V0}, [bufferPtr], #64
+    ## apply UVcmp to Y0cmp, placing it in Y0weights
+    and Y0weights, v4.16b, v6.16b
+    ## apply UVcmp to Y1cmp, placing it in Y1weights
+    and Y1weights, v5.16b, v6.16b
+    ## write back to the image buffer, post-incrementing by 64
+    st4 {Y0weights, v9.16b, Y1weights, v11.16b}, [bufferPtr], #64
 
-    ## cmhs sets or clears all bits in the output register. we want to count the number of pixels that
-    ## match, so we only need one bit from each comparison, which we can then add together. we can shift
-    ## each luminance comparison right 7 bits, leaving only the top bit set.
-    ushr v4.16b, v4.16b, #7
-    ushr v5.16b, v5.16b, #7
-    ## acc = (Y0cmp + Y1cmp) && (UVcmp)
-    add v4.16b, v4.16b, v5.16b
-    and v4.16b, v4.16b, v6.16b
-    ## add up the number of matches into the lowest byte of v7
-    addv b7, v4.16b
-    ## move that sum into the 8th byte of acc
-    mov acc.B[8], v7.B[0]
-    ## add that sum to the running accumulator, storing it back into accc
-    addp accScalar, acc.2d
+    ## acc += Y0cmp && UVcmp + Y1cmp && UVcmp
+    ## since we're using signed arithmetic, we need to handle this a bit differently than the non-mask
+    ## version of NEONVision. if we were to just add Y0weights and Y1weights, we run the risk of
+    ## overflowing and getting the wrong sum. so we add across the 2 vectors and add them to acc
+    ## separately. we've already done the AND with UVcmp, so we can reuse that.
+    ## add across Y0weights, placing the result in the lowest halfword of v7
+    saddlv h7, Y0weights
+    ## sign extend into x7
+    smov x7, v7.H[0]
+    ## add to the accumulator
+    add acc, acc, x7
+    ## add across Y1weights
+    saddlv h7, Y1weights
+    ## sign extend into x7
+    smov x7, v7.H[0]
+    ## add to the accumulator
+    add acc, acc, x7
 
-    b processYUY2ForDisplay_loop
+    ## continue the loop
+    b processYUY2MaskForDisplay_loop
 
-processYUY2ForDisplay_done:
-    ## move the accumulator to x0 for return
-    umov x0, acc.D[0]
+processYUY2MaskForDisplay_done:
+    ## move the running accumulator to x0 for returning
+    mov x0, acc
 
+    ## restore x9 and x10
+    ldp x9, x10, [sp], #16
+    ## restore v10 and v11
+    ldp q10, q11, [sp], #32
+    ## restore v8 and v9
+    ldp q8, q9, [sp], #32
     ## pop stack frame
     ldp x29, x30, [sp], #16
 
@@ -500,9 +550,6 @@ processYUY2ForDisplay_done:
 #undef highColor
 #undef lowColor
 #undef bufferEnd
-#undef maskY
-#undef maskU
-#undef maskV
 #undef Y0
 #undef U0
 #undef Y1
@@ -523,3 +570,6 @@ processYUY2ForDisplay_done:
 #undef Vlow
 #undef acc
 #undef accScalar
+#undef Y0weights
+#undef Y1weights
+#undef maskPtr

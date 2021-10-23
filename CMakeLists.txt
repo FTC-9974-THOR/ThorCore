@@ -31,6 +31,8 @@ add_library(
         ${NATIVE_ROOT}/JNIPixy2USB.cpp
         ${NATIVE_ROOT}/JNIUtilities.cpp
         ${ASM_ROOT}/neon/NEONCore.s
+        ${NATIVE_ROOT}/JNINativeImageByteBuffer.cpp
+        ${NATIVE_ROOT}/JNINativeImageByteBuffer.h
         ${NATIVE_ROOT}/ThorCore.cpp
 )
 set_source_files_properties(

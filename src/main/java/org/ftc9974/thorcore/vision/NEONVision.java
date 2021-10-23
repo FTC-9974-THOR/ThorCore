@@ -15,7 +15,7 @@ import org.ftc9974.thorcore.NativeCodeLoader;
  *
  * Currently only supported on arm64-v8a ABIs, and only tested on the REV Control Hub.
  *
- * Assembly code is in src/main/asm/neon/NEONVision-arm64.s.
+ * Assembly code is in src/main/asm/neon/NEONVision-arm64.s and src/main/asm/neon/NEONVisionMask-arm64.s
  */
 public class NEONVision{
 
@@ -100,4 +100,10 @@ public class NEONVision{
      */
     @SuppressWarnings("JavaJniMissingFunction")
     public static native long processYUY2ForDisplay(long bufferPtr, long bufferLen, long highColor, long lowColor);
+
+    @SuppressWarnings("JavaJniMissingFunction")
+    public static native long processYUY2WithMask(long bufferPtr, long bufferLen, long highColor, long lowColor, long maskPtr);
+
+    @SuppressWarnings("JavaJniMissingFunction")
+    public static native long processYUY2WithMaskForDisplay(long bufferPtr, long bufferLen, long highColor, long lowColor, long maskPtr);
 }
