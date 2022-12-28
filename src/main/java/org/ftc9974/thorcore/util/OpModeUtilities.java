@@ -2,7 +2,8 @@ package org.ftc9974.thorcore.util;
 
 import android.app.Activity;
 
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl;
+
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 public final class OpModeUtilities {

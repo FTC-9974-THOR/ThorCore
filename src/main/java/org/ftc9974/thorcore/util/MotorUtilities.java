@@ -26,4 +26,24 @@ public final class MotorUtilities {
         //return (int) (wheelRevolutions * ticksPerWheelRevolution);
         return (int) ((distance * motorType.ticksPerRevolution * gearRatio) / (wheelDiameter * Math.PI));
     }
+
+    public static class MotorConstants {
+        public double kV, kB, kStatic;
+    }
+
+    public static MotorConstants calculateMotorConstants(double freeSpeed, double stallTorque, double startupVoltage, double nominalVoltage) {
+        /*
+        % stallTorque = Kv * nominalVoltage - Kb * 0
+        Kv = stallTorque / nominalVoltage; % motor constant
+        % 0 = Kv * nominalVoltage - Kb * freeSpeed
+        % 0 = (stallTorque / nominalVoltage) * nominalVoltage - Kb * freeSpeed
+        % stallTorque = Kb * freeSpeed
+        Kb = stallTorque / freeSpeed; % back-EMF and bearing drag
+         */
+        MotorConstants ret = new MotorConstants();
+        ret.kV = stallTorque / nominalVoltage; // N m / V
+        ret.kStatic = ret.kV * startupVoltage; // N m
+        ret.kB = (stallTorque - ret.kStatic) / freeSpeed; // N m / (rad/s)
+        return ret;
+    }
 }

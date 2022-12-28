@@ -20,6 +20,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_ARM_NEON=TRUE"
+                targets "ThorCore"
             }
         }
     }
@@ -67,9 +68,9 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     //implementation project(':FtcRobotController')
-    implementation 'org.firstinspires.ftc:RobotCore:7.0.0'
-    implementation 'org.firstinspires.ftc:Hardware:7.0.0'
-    implementation 'org.firstinspires.ftc:FtcCommon:7.0.0'
+    implementation 'org.firstinspires.ftc:RobotCore:8.0.0'
+    implementation 'org.firstinspires.ftc:Hardware:8.0.0'
+    implementation 'org.firstinspires.ftc:FtcCommon:8.0.0'
     implementation 'org.apache.commons:commons-lang3:3.9'
 
     testImplementation 'junit:junit:4.12'

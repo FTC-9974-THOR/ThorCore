@@ -26,10 +26,10 @@ public abstract class LynxI2cDeviceSynchEx extends LynxI2cDeviceSynchV2 {
     }
 
     public void writeSingleByte(byte b) {
-        LynxCommand<?> command = new LynxI2cWriteSingleByteCommand(getModule(), bus, i2cAddr, b);
+        final Supplier<LynxI2cWriteSingleByteCommand> supplier = () -> new LynxI2cWriteSingleByteCommand(getModule(), bus, i2cAddr, b);
         try {
             acquireI2cLockWhile(() -> {
-                sendI2cWriteTx(command);
+                sendI2cTransaction(supplier);
                 waitForWriteCompletions(I2cWaitControl.ATOMIC);
                 return null;
             });
@@ -40,10 +40,10 @@ public abstract class LynxI2cDeviceSynchEx extends LynxI2cDeviceSynchV2 {
     }
 
     public void writeMultipleBytes(byte[] data) {
-        LynxCommand<?> command = new LynxI2cWriteMultipleBytesCommand(getModule(), bus, i2cAddr, data);
+        final Supplier<LynxI2cWriteMultipleBytesCommand> supplier = () -> new LynxI2cWriteMultipleBytesCommand(getModule(), bus, i2cAddr, data);
         try {
             acquireI2cLockWhile(() -> {
-                sendI2cWriteTx(command);
+                sendI2cTransaction(supplier);
                 waitForWriteCompletions(I2cWaitControl.ATOMIC);
                 return null;
             });
@@ -101,6 +101,6 @@ public abstract class LynxI2cDeviceSynchEx extends LynxI2cDeviceSynchV2 {
             deviceHavingProblems = this;
             handleException(e);
         }
-        return readTimeStampedPlaceholder.log(TimestampedI2cData.makeFakeData(deviceHavingProblems, getI2cAddress(), ireg, creg));
+        return readTimeStampedPlaceholder.log(TimestampedI2cData.makeFakeData(getI2cAddress(), ireg, creg));
     }
 }

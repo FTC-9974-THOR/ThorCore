@@ -6,7 +6,7 @@ import org.ftc9974.thorcore.NativeCodeLoader;
 
 import java.nio.ByteBuffer;
 
-// do to the use of direct ByteBuffers, these are expensive to create and destroy. Instantiate these
+// due to the use of direct ByteBuffers, these are expensive to create and destroy. Instantiate these
 // once and save them as constants, if possible.
 public class NativeImageByteBuffer {
 
