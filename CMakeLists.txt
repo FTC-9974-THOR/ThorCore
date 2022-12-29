@@ -1,6 +1,6 @@
 # top-level buildscript for all native code in ThorCore.
-
 cmake_minimum_required(VERSION 3.4.1)
+project(ThorCore)
 enable_language(ASM)
 
 set(NATIVE_ROOT src/main/cpp)

@@ -2,7 +2,7 @@
 ThorCore is a library for FTC. It provides implementations for common drivetrains, vector mathematics,
 closed-loop controllers, vision systems, and sensors.
 
-This is the dev branch. Code here may be unfinished or operating incorrectly.
+This is the dev branch. Some of the code here may be unfinished or unstable, but most things should work.
 
 ### Installation
 There are 2 ways to install ThorCore.
@@ -11,7 +11,7 @@ Download the latest .aar file from the Releases page. Copy it into the ```libs``
 robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the dependencies block, add the following line:
 ```gradle
-implementation name: "thorcore", version: "0.4+", ext: "aar"
+implementation name: "ThorCore", version: "0.5+", ext: "aar"
 ```
 Run a Gradle sync, and it should be all set.
 #### From Source
@@ -45,14 +45,10 @@ dependencies {
 
 Run a Gradle sync, and you should be all set. Android Studio should automatically download and install
 the NDK and CMake, but you can download them manually from the SDK Manager if necessary. ThorCore is
-built and tested with NDK version 21.1.6352462 and CMake 3.10.2, but it should work with any recent
-version of the NDK and CMake. The FTC SDK uses NDK version 21.3.6528147 by default, which should work
-just as well.
-
-### Licensing
-ThorCore is published under a modified MIT license. The exact licensing terms can be found in LICENSE.md.
+built and tested with NDK version 25.1.8937393 and CMake 3.18.1, but it should work with any recent
+version of the NDK and CMake.
 
 ***
 For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.4.1*
+*ThorCore v0.5.0*

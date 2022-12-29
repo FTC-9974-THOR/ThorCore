@@ -38,17 +38,10 @@ public final class GamepadEnhanced {
         }
 
         private GamepadState(Gamepad other) {
-            Gamepad gamepad;
-            try {
-                // try to create a local copy that can't be affected by other threads. Gamepads
-                // receive updates asynchronously, and their state variables are not thread safe.
-                gamepad = new Gamepad();
-                gamepad.copy(other);
-            } catch (RobotCoreException e) {
-                // if we can't make a copy, use the non-thread-safe one and hope nothing gets
-                // changed while we store its state
-                gamepad = other;
-            }
+            // try to create a local copy that can't be affected by other threads. Gamepads
+            // receive updates asynchronously, and their state variables are not thread safe.
+            Gamepad gamepad = new Gamepad();
+            gamepad.copy(other);
             a = gamepad.a;
             b = gamepad.b;
             x = gamepad.x;

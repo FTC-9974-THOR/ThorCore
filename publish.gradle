@@ -24,7 +24,23 @@ task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
+task packagedAar(type: Jar) {
+    dependsOn javadocsJar, sourcesJar
+    archiveName String.format("ThorCore-%s.aar", android.defaultConfig.versionName)
+    destinationDir file("build")
+    from zipTree("build/outputs/aar/ThorCore-release.aar")
+    from javadocsJar.archiveFile
+    from sourcesJar.archiveFile
+}
+
+artifacts {
+    archives javadocsJar
+    archives sourcesJar
+    archives packagedAar
+}
+
 afterEvaluate {
+    packagedAar.dependsOn(bundleReleaseAar)
     publishing {
         publications {
             ThorCore(MavenPublication) {
@@ -78,6 +94,7 @@ afterEvaluate {
     publish.dependsOn(build)
 
     signing {
-        sign configurations.archives
+        // todo set up GPG keys
+        //sign configurations.archives
     }
 }
