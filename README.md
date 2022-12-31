@@ -9,7 +9,7 @@ There are 2 ways to install ThorCore.
 #### Packaged Binary
 Download the latest .aar file from the Releases page. Copy it into the ```libs``` folder in your
 robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
-the dependencies block, add the following line:
+the ```dependencies``` block, add the following line:
 ```gradle
 implementation name: "ThorCore", version: "0.5+", ext: "aar"
 ```
@@ -51,4 +51,4 @@ version of the NDK and CMake.
 ***
 For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.5.0*
+*ThorCore v0.5.1*

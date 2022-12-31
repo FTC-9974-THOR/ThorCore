@@ -11,7 +11,7 @@ import org.ftc9974.thorcore.meta.Realizer;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
 
 /**
- * This sample showcases the most powerful feature of ThorCore - the Realizer.
+ * This sample showcases one of the most powerful features of ThorCore - the Realizer.
  * The Realizer loops through every field declared in a class, looking for any fields annotated
  * with {@code @Hardware}. Any field with that annotation is then loaded from the hardware map.
  *
@@ -20,7 +20,6 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
  * <b>Note: Fields marked with {@code @Hardware} CANNOT be private!</b>
  */
 @TeleOp(name = "Sample - Realized Hardware", group = "ThorCore Samples")
-@Disabled
 public class SampleRealizedHardware extends OpModeEnhanced {
 
     @Hardware

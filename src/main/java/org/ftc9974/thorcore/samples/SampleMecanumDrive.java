@@ -18,7 +18,6 @@ import org.ftc9974.thorcore.robot.drivetrains.MecanumDrive;
  * javadocs for {@link org.ftc9974.thorcore.meta.Realizer#realize(Object, HardwareMap)}.
  */
 @TeleOp(name = "Sample - Mecanum Drive", group = "ThorCore Samples")
-@Disabled
 public class SampleMecanumDrive extends OpModeEnhanced {
 
     // Declare a variable of type MecanumDrive
