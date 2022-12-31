@@ -7,7 +7,7 @@ android {
         minSdkVersion 25
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 29
-        versionName "0.5.0"
+        versionName "0.5.1"
         // version code is the version name with dots and leading zeros removed
         versionCode android.defaultConfig.versionName.replaceAll("(\\.)|(^0+)", "").toInteger()
 

@@ -16,7 +16,6 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
  * {@link org.ftc9974.thorcore.meta.Realizer#realize(Object, HardwareMap)}.
  */
 @TeleOp(name = "Sample - 2 Wheel Tank Drive", group = "ThorCore Samples")
-@Disabled
 public class Sample2WheelTankDrive extends OpModeEnhanced {
 
     // Declare a variable of type TankDrive2Wheel
