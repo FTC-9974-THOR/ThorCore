@@ -18,7 +18,8 @@ import java.io.IOException;
  * will too.
  * A USB webcam. In the configuration file, this must be named "Webcam 1".
  */
-@TeleOp(name = "Sample - NEONStackVision", group = "ThorCore Samples")
+@TeleOp(name = "Sample - NEONStackVision", group = "_ ThorCore Samples")
+@Disabled
 public class SampleNEONStackVision extends OpMode {
 
     /**

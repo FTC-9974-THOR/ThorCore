@@ -26,7 +26,7 @@ public enum MotorType {
     YELLOWJACKET_139((int) (7 * 4 * 139)),   //   43 RPM
     YELLOWJACKET_188((int) (7 * 4 * 188));   //   30 RPM
 
-    public int ticksPerRevolution;
+    public final int ticksPerRevolution;
 
     MotorType(int ticks) {
         ticksPerRevolution = ticks;

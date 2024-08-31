@@ -4,9 +4,11 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import androidx.annotation.NonNull;
 
+import org.ftc9974.thorcore.control.math.Complex;
 import org.ftc9974.thorcore.control.math.Vector2;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -274,6 +276,8 @@ public final class MathUtilities {
     }
 
     public static double average(int... values) {
+        if (values.length == 0) return 0;
+
         int sum = 0;
         for (int value : values) {
             sum += value;
@@ -282,11 +286,81 @@ public final class MathUtilities {
     }
 
     public static double average(double... values) {
+        if (values.length == 0) return 0;
+
         double sum = 0;
         for (double value : values) {
             sum += value;
         }
         return sum / values.length;
+    }
+
+    /**
+     * Computes the circular mean of the provided values. The circular mean is a statistical
+     * operation designed to find the mean of a set of cyclic values such as angles.
+     *
+     * @param values set of angles to take the mean of
+     * @return circular mean, or 0 if no angles are provided
+     */
+    // https://en.wikipedia.org/wiki/Directional_statistics
+    public static double circularMean(double... values) {
+        if (values.length == 0) return 0;
+        Complex m1 = circularMoment(1, values);
+        return m1.angle();
+    }
+
+    public static double circularVariance(double... values) {
+        if (values.length == 0) return 0;
+        Complex m1 = circularMoment(1, values);
+        return 1 - m1.magnitude();
+    }
+
+    public static double circularStdDev(double... values) {
+        if (values.length == 0) return 0;
+        Complex m1 = circularMoment(1, values);
+        return Math.sqrt(-2 * Math.log(m1.magnitude()));
+    }
+
+    public static double circularCoefficientOfVariance(double... values) {
+        if (values.length == 0) return 0;
+
+        return circularStdDev(values) / circularMean(values);
+    }
+    public static Complex circularMoment(int n, double... values) {
+        if (values.length == 0) return new Complex(0, 0);
+
+        double real = 0, imag = 0;
+        for (double value : values) {
+            // this is normally done with complex numbers, but applying the law of powers of powers
+            // and Euler's identity, we can just use trig and a pair of real numbers.
+            real += Math.cos(n * value);
+            imag += Math.sin(n * value);
+        }
+        real /= values.length;
+        imag /= values.length;
+
+        return new Complex(real, imag);
+    }
+
+    public static double variance(double... values) {
+        if (values.length == 0) return 0;
+
+        double mean = average(values);
+        double sum = 0;
+        for (double value : values) {
+            sum += (value - mean) * (value - mean);
+        }
+        return sum / values.length;
+    }
+
+    public static double stdDev(double... values) {
+        return Math.sqrt(variance(values));
+    }
+
+    public static double coefficientOfVariance(double... values) {
+        if (values.length == 0) return 0;
+
+        return stdDev(values) / average(values);
     }
 
     /**
@@ -368,6 +442,10 @@ public final class MathUtilities {
 
     public static double mmToInches(double mm) {
         return mm / 25.4;
+    }
+
+    public static double rpmToRadPerSec(double rpm) {
+        return 0.1047 * rpm;
     }
 
     /**

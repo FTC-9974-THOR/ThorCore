@@ -19,7 +19,8 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
  *
  * <b>Note: Fields marked with {@code @Hardware} CANNOT be private!</b>
  */
-@TeleOp(name = "Sample - Realized Hardware", group = "ThorCore Samples")
+@TeleOp(name = "Sample - Realized Hardware", group = "_ ThorCore Samples")
+@Disabled
 public class SampleRealizedHardware extends OpModeEnhanced {
 
     @Hardware

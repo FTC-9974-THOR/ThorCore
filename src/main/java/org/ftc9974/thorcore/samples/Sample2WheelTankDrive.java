@@ -15,7 +15,8 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
  * part of the ThorCore naming convention, which is explained in the javadocs for
  * {@link org.ftc9974.thorcore.meta.Realizer#realize(Object, HardwareMap)}.
  */
-@TeleOp(name = "Sample - 2 Wheel Tank Drive", group = "ThorCore Samples")
+@TeleOp(name = "Sample - 2 Wheel Tank Drive", group = "_ ThorCore Samples")
+@Disabled
 public class Sample2WheelTankDrive extends OpModeEnhanced {
 
     // Declare a variable of type TankDrive2Wheel

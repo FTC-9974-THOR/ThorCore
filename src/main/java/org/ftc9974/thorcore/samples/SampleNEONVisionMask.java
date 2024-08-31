@@ -3,6 +3,7 @@ package org.ftc9974.thorcore.samples;
 import android.graphics.Rect;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -13,7 +14,8 @@ import org.ftc9974.thorcore.util.TimingUtilities;
 import java.io.IOException;
 import java.util.Locale;
 
-@Autonomous(name = "Sample - NEONVision Mask", group = "ThorCore Samples")
+@Autonomous(name = "Sample - NEONVision Mask", group = "_ ThorCore Samples")
+@Disabled
 public class SampleNEONVisionMask extends LinearOpMode {
 
     private static final String TAG = "SampleNEONVisionMask";

@@ -14,8 +14,8 @@ import java.io.IOException;
 /**
  * This sample demonstrates the Power Play variant of the Seeker.
  */
-@TeleOp(name = "Sample - Power Play Vision", group = "ThorCore Samples")
-//@Disabled
+@TeleOp(name = "Sample - Power Play Vision", group = "_ ThorCore Samples")
+@Disabled
 public class SamplePowerPlayVision extends OpMode {
 
     private PowerPlaySeeker ppSeeker;

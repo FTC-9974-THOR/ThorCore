@@ -1,5 +1,6 @@
 package org.ftc9974.thorcore.samples;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -9,7 +10,8 @@ import org.ftc9974.thorcore.robot.sensors.USBWebcam;
 
 import java.io.IOException;
 
-@TeleOp(name = "Sample - USBWebcam", group = "ThorCore Samples")
+@TeleOp(name = "Sample - USBWebcam", group = "_ ThorCore Samples")
+@Disabled
 public class SampleUSBWebcam extends OpMode {
 
     private USBWebcam webcam;

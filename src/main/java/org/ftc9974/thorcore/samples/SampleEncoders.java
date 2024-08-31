@@ -17,7 +17,8 @@ import java.util.Locale;
  * Note: setting a DcMotor's direction to reverse may not reverse the encoders. Thus, this
  * sample may make the robot turn in place instead of driving forward.
  */
-@TeleOp(name = "Sample - Encoders", group = "ThorCore Samples")
+@TeleOp(name = "Sample - Encoders", group = "_ ThorCore Samples")
+@Disabled
 public class SampleEncoders extends LinearOpMode {
 
     private TankDrive4Wheel rb;

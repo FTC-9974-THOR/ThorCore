@@ -14,7 +14,7 @@ import org.ftc9974.thorcore.util.MathUtilities;
 /**
  * Implements the behaviour of a mecanum drive.
  */
-public final class MecanumDrive implements HolonomicDrivetrain {
+public class MecanumDrive implements HolonomicDrivetrain {
 
     @SuppressWarnings("WeakerAccess")
     @Hardware

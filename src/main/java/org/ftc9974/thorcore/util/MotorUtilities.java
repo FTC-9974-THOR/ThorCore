@@ -20,15 +20,36 @@ public final class MotorUtilities {
      * @return ticks
      */
     public static int ticksForDistance(double distance, double wheelDiameter, double gearRatio, MotorType motorType) {
+        return ticksForDistance(distance, wheelDiameter, gearRatio, motorType.ticksPerRevolution);
+    }
+
+    /**
+     * Calculates ticks to go the given distance.
+     *
+     * Works with whatever units you use, as long as distance and wheelDiameter are given in the
+     * same units.
+     *
+     * @param distance distance
+     * @param wheelDiameter wheel diameter
+     * @param gearRatio ratio between wheels and motor shaft
+     * @param ticksPerRevolution number of ticks per revolution of the motor output shaft
+     * @return ticks
+     */
+    public static int ticksForDistance(double distance, double wheelDiameter, double gearRatio, double ticksPerRevolution) {
         //double circumference = wheelDiameter * Math.PI;
         //double wheelRevolutions = distance / circumference;
         //double ticksPerWheelRevolution = motorType.ticksPerRevolution * gearRatio;
         //return (int) (wheelRevolutions * ticksPerWheelRevolution);
-        return (int) ((distance * motorType.ticksPerRevolution * gearRatio) / (wheelDiameter * Math.PI));
+        return (int) ((distance * ticksPerRevolution * gearRatio) / (wheelDiameter * Math.PI));
     }
 
     public static class MotorConstants {
         public double kV, kB, kStatic;
+
+        public double computeVoltage(double torque, double speed) {
+            if (speed == 0) return torque / kV;
+            else return (Math.copySign(kStatic, speed) + kB * speed + torque) / kV;
+        }
     }
 
     public static MotorConstants calculateMotorConstants(double freeSpeed, double stallTorque, double startupVoltage, double nominalVoltage) {

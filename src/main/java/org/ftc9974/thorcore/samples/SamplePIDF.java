@@ -17,7 +17,8 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
  *
  * It expects a 2-wheel tank drive, using a REV hub.
  */
-@TeleOp(name = "Sample - PIDF", group = "ThorCore Samples")
+@TeleOp(name = "Sample - PIDF", group = "_ ThorCore Samples")
+@Disabled
 public class SamplePIDF extends OpModeEnhanced {
 
     // This will look for an imu called simply "imu". If you are using REV hubs, the imu is configured

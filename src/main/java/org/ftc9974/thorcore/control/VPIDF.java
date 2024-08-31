@@ -5,7 +5,7 @@ Velocity PID implementation
 
 https://deltamotion.com/support/webhelp/rmctools/Controller_Features/Control_Modes/Velocity_PID.htm
  */
-public final class VPIDF {
+public class VPIDF {
 
     private double kP, kI, kD, kF;
 

@@ -12,8 +12,10 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.NavUtil;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
@@ -22,7 +24,7 @@ import org.ftc9974.thorcore.control.math.Vector2;
 
 // reading data from the IMU is very slow, with each read taking about 30ms. If speed is important,
 // the IMU might not be a good choice.
-public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationIntegrator {
+public class IMUNavSource implements NavSource, BNO055IMU.AccelerationIntegrator {
 
     private BNO055IMU imu;
     private Position position;
@@ -58,6 +60,7 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.accelRange = BNO055IMU.AccelRange.G8;
         parameters.accelerationIntegrationAlgorithm = this;
         parameters.calibrationDataFile = calibrationFile;
         if (!imu.initialize(parameters)) {
@@ -68,7 +71,10 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
                 throw new RuntimeException("Both IMUs have failed! Error message: " + imu.getSystemError().toString());
             }
         }
-        imu.startAccelerationIntegration(null, null, 10);
+    }
+
+    public void startAccelerationIntegration() {
+        imu.startAccelerationIntegration(new Position(DistanceUnit.MM, 0, 0, 0, 0), new Velocity(DistanceUnit.MM, 0, 0, 0, 0), 10);
     }
 
     public BNO055IMU.CalibrationStatus getCalibrationStatus() {
@@ -131,11 +137,27 @@ public final class IMUNavSource implements NavSource, BNO055IMU.AccelerationInte
         return imu.getAngularOrientation();
     }
 
+    public AngularVelocity getAngularVelocity() {
+        return imu.getAngularVelocity();
+    }
+
+    public double getHeadingVelocity() {
+        switch (axis) {
+            case 1:
+                return imu.getAngularVelocity().xRotationRate;
+            case 2:
+                return imu.getAngularVelocity().yRotationRate;
+            case 3:
+            default:
+                return imu.getAngularVelocity().zRotationRate;
+        }
+    }
+
     @Override
     public void initialize(@NonNull BNO055IMU.Parameters parameters, @Nullable Position initialPosition, @Nullable Velocity initialVelocity) {
         position = initialPosition != null ? initialPosition : position;
         velocity = initialVelocity != null ? initialVelocity : velocity;
-        acceleration = null;
+        acceleration = new Acceleration(DistanceUnit.METER, 0, 0, 0, 0);
     }
 
     @Override

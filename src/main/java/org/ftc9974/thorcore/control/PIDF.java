@@ -47,12 +47,13 @@ import java.util.function.DoubleSupplier;
  * </ul>
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public final class PIDF {
+public class PIDF {
 
     private static final String TAG = "org.ftc9974.thorcore.control.PIDF";
 
-    private double kP, kI, kD, kF;
+    public double kP, kI, kD, kF;
     private double setpoint;
+    private double velocitySetpoint;
     private double runningIntegral;
     private double lastError;
     private double integralMin, integralMax;
@@ -64,7 +65,6 @@ public final class PIDF {
     private DoubleConsumer outputFunc;
 
     private long lastTime = -1;
-    private long lastDTime = -1;
 
     private boolean continuous;
     private double contLow, contDiff, contHigh;
@@ -76,10 +76,8 @@ public final class PIDF {
     private double nominalOutputForward, nominalOutputReverse;
 
     private double period;
-    private boolean periodAppliesOnlyToDTerm;
-    private double lastDTerm;
 
-    private double deadzone;
+    private final SlidingAverageFilter filter = new SlidingAverageFilter(10);
 
     /**
      * Construct a new PIDF controller.
@@ -128,7 +126,6 @@ public final class PIDF {
         contDiff = 2;
         contHigh = 1;
         period = -1;
-        periodAppliesOnlyToDTerm = false;
     }
 
     /**
@@ -293,7 +290,7 @@ public final class PIDF {
             }
 
             if (kD != 0 && deltaTime != 0) {
-                double d = (error - lastError) / deltaTime;
+                double d = filter.update((error - lastError) / deltaTime);
                 dComponent = kD * d;
             }
 

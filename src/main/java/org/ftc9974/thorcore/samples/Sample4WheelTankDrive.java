@@ -18,7 +18,8 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive4Wheel;
  * Why the TD4W- in the names? It's part of the ThorCore naming convention, which is explained in
  * the javadoc for {@link org.ftc9974.thorcore.meta.Realizer#realize(Object, HardwareMap)}.
  */
-@TeleOp(name = "Sample - 4 Wheel Tank Drive", group = "ThorCore Samples")
+@TeleOp(name = "Sample - 4 Wheel Tank Drive", group = "_ ThorCore Samples")
+@Disabled
 public class Sample4WheelTankDrive extends OpModeEnhanced {
 
     // Declare a variable of type TankDrive4Wheel

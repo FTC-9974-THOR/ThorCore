@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@TeleOp(name = "Hardware Debugger", group = "ThorCore")
+@TeleOp(name = "Hardware Debugger", group = "_ ThorCore")
 public class Debugger extends OpModeEnhanced {
 
     @Override

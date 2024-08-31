@@ -25,7 +25,8 @@ import java.util.List;
  * 
  * @see Pixy2USB
  */
-@TeleOp(name = "Sample - Pixy2USB", group = "ThorCore Samples")
+@TeleOp(name = "Sample - Pixy2USB", group = "_ ThorCore Samples")
+@Disabled
 public class SamplePixy2USB extends OpMode {
 
     private Pixy2USB pixy;

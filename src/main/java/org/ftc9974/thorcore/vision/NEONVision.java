@@ -17,7 +17,7 @@ import org.ftc9974.thorcore.NativeCodeLoader;
  *
  * Assembly code is in src/main/asm/neon/NEONVision-arm64.s and src/main/asm/neon/NEONVisionMask-arm64.s
  */
-public class NEONVision{
+public class NEONVision {
 
     /**
      * Logging tag
