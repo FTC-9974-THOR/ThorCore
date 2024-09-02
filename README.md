@@ -37,6 +37,10 @@ android {
     compileOptions.targetCompatibility JavaVersion.VERSION_11
 }
 
+repositories {
+    maven { url = 'https://maven.brott.dev/' }
+}
+
 dependencies {
     implementation project(':ThorCore')
 }
@@ -50,4 +54,4 @@ version of the NDK and CMake.
 ***
 For additional information, submit an issue or DM @fortraan on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v1.0.0*
+*ThorCore v1.0.1*

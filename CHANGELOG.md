@@ -1,3 +1,7 @@
+# ThorCore 1.0.1
+
+Updated to FTC SDK v9.2
+
 # ThorCore 1.0.0
 
 Added a new RoadRunner-compatible navigation system. This system includes support for both
