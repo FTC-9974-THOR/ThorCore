@@ -1,5 +1,7 @@
 package org.ftc9974.thorcore.meta.annotation;
 
+import androidx.annotation.NonNull;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -14,5 +16,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Namespace {
 
-    String value();
+    @NonNull String value();
 }

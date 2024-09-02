@@ -17,7 +17,7 @@ import java.util.Map;
  * API for EEVals. Most of these methods are for internal use, so it is rare you will ever need to
  * directly interact with this class.
  */
-public final class EEVals {
+public class EEVals {
 
     private static final String TAG = "org.ftc9974.thorcore.meta.EEVals";
 

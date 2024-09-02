@@ -18,7 +18,7 @@ import java.util.Locale;
 /**
  * Used to "realize" fields marked with {@code @Hardware}/{@code @EEVal}.
  */
-public final class Realizer {
+public class Realizer {
 
     private Realizer() {}
 
@@ -57,7 +57,7 @@ public final class Realizer {
     @SuppressWarnings({"unchecked", "deprecation"})
     public static void realize(Object obj, HardwareMap hardwareMap) {
         EEVals.init(hardwareMap.appContext);
-        Class clazz = obj.getClass();
+        Class<?> clazz = obj.getClass();
         Field[] fields = clazz.getDeclaredFields();
         boolean realizedMarked = clazz.isAnnotationPresent(Realized.class);
         for (Field field : fields) {
@@ -70,7 +70,7 @@ public final class Realizer {
                         RobotLog.dd(TAG, "Factory method found");
                         field.set(obj, factory.invoke(null, formattedName, hardwareMap));
                     } else {
-                        Constructor constructor = findRealizableFactoryConstructor(field.getType());
+                        Constructor<?> constructor = findRealizableFactoryConstructor(field.getType());
                         if (constructor != null) {
                             RobotLog.vv(TAG, "Factory constructor found");
                             field.set(obj, constructor.newInstance(formattedName, hardwareMap));
@@ -99,7 +99,7 @@ public final class Realizer {
             if (field.isAnnotationPresent(EEVal.class) || realizedMarked) {
                 String prefix = "";
                 if (clazz.isAnnotationPresent(Namespace.class)) {
-                    prefix = ((Namespace) clazz.getAnnotation(Namespace.class)).value() + "/";
+                    prefix = clazz.getAnnotation(Namespace.class).value() + "/";
                 }
                 try {
                     field.set(obj, EEVals.get(prefix + getFormattedName(field), field.getType()));
@@ -112,7 +112,7 @@ public final class Realizer {
         }
     }
 
-    private static Method findRealizableFactoryMethod(Class type) {
+    private static Method findRealizableFactoryMethod(Class<?> type) {
         RobotLog.vv(TAG, String.format(Locale.getDefault(), "[findRealizableFactoryMethod] scanning type %s", type.getSimpleName()));
         for (Method m : type.getDeclaredMethods()) {
             RobotLog.vv(TAG, String.format(Locale.getDefault(), "Looking at method %s", m.getName()));
@@ -123,9 +123,9 @@ public final class Realizer {
         return null;
     }
 
-    private static Constructor findRealizableFactoryConstructor(Class type) {
+    private static Constructor<?> findRealizableFactoryConstructor(Class<?> type) {
         RobotLog.vv(TAG, String.format(Locale.getDefault(), "[findRealizableFactoryConstructor] scanning type %s", type.getSimpleName()));
-        for (Constructor c : type.getDeclaredConstructors()) {
+        for (Constructor<?> c : type.getDeclaredConstructors()) {
             RobotLog.vv(TAG, String.format(Locale.getDefault(), "Looking at constructor %s", c.getName()));
             if (c.isAnnotationPresent(RealizableFactory.class)) {
                 return c;

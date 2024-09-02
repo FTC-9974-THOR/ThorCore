@@ -1,5 +1,7 @@
 package org.ftc9974.thorcore.meta.annotation;
 
+import androidx.annotation.NonNull;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -17,5 +19,5 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Hardware {
 
-    String name() default "";
+    @NonNull String name() default "";
 }
