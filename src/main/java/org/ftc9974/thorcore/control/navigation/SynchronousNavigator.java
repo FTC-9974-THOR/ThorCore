@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.ftc9974.thorcore.control.HolonomicDrivetrain;
 import org.ftc9974.thorcore.control.math.Vector2;
 
-public final class SynchronousNavigator {
+public class SynchronousNavigator {
 
     private static final String TAG = "org.ftc9974.thorcore.control.navigation.SynchronousNavigator";
 

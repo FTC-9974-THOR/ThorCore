@@ -2,7 +2,7 @@ package org.ftc9974.thorcore.control;
 
 import java.util.Arrays;
 
-public final class SlidingAverageFilter {
+public class SlidingAverageFilter {
 
     // samples are stored in a circular buffer, because it doesn't matter
     // what order they're stored in, the average will be the same

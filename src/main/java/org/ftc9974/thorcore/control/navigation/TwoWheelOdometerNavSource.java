@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 // todo work in progress
-public final class TwoWheelOdometerNavSource implements NavSource {
+public class TwoWheelOdometerNavSource implements NavSource {
 
     private static final String TAG = "OdometerNavSource";
 

@@ -15,7 +15,7 @@ import org.ftc9974.thorcore.util.OpModeUtilities;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class Navigator implements OpModeManagerNotifier.Notifications {
+public class Navigator implements OpModeManagerNotifier.Notifications {
 
     private static final String TAG = "org.ftc9974.thorcore.control.navigation.Navigator";
 

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.ftc9974.thorcore.internal.RealizableFactory;
 
-public final class PhoneGyroscope extends PhoneSensor {
+public class PhoneGyroscope extends PhoneSensor {
 
     @RealizableFactory
     public static PhoneGyroscope create(String name, HardwareMap hardwareMap) {

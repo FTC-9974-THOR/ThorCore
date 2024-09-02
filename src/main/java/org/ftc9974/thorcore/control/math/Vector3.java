@@ -9,7 +9,7 @@ import java.util.Locale;
  * Implements Euclidean vector operations in Cartesian coordinates.
  * Additionally, some methods support spherical coordinates.
  */
-public final class Vector3 {
+public class Vector3 {
 
     // zero and unit vectors i, j, k
     public static final Vector3 ZERO = new Vector3(0, 0, 0),

@@ -5,7 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 
-public final class PhoneAccelerometer extends PhoneSensor {
+public class PhoneAccelerometer extends PhoneSensor {
 
     public PhoneAccelerometer(Context appContext) {
         super(appContext, Sensor.TYPE_ACCELEROMETER, 2, SensorManager.SENSOR_DELAY_GAME);

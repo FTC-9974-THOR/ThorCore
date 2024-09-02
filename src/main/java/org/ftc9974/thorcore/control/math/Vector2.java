@@ -11,7 +11,7 @@ import java.util.Locale;
  * (+x = right, +y = up, heading of 0 = right, heading increases counterclockwise)
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public final class Vector2 {
+public class Vector2 {
 
     public static final Vector2 ZERO = new Vector2(0, 0);
 

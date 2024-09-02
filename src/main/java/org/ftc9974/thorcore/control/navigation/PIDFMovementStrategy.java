@@ -8,7 +8,7 @@ import org.ftc9974.thorcore.control.math.Vector2;
 import org.ftc9974.thorcore.control.navigation.MovementStrategy;
 import org.ftc9974.thorcore.util.MathUtilities;
 
-public final class PIDFMovementStrategy implements MovementStrategy {
+public class PIDFMovementStrategy implements MovementStrategy {
 
     private PIDF xPid, yPid, thetaPid;
 
