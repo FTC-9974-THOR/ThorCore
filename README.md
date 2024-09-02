@@ -7,13 +7,14 @@ This is the dev branch. Some of the code here may be unfinished or unstable, but
 ### Installation
 There are 2 ways to install ThorCore.
 #### Packaged Binary
-Download the latest .aar file from the Releases page. Copy it into the ```libs``` folder in your
-robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
+Download the latest .aar file from the Releases page. Copy it into the ```lib``` folder under the
+```TeamCode``` module. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
-implementation name: "ThorCore", version: "1.0.1", ext: "aar"
+implementation files("lib/ThorCore-1.0.1.aar")
 ```
 Run a Gradle sync, and it should be all set.
+
 #### From Source
 Clone ThorCore into your Android Studio project. The ThorCore folder should be in the
 top-level directory, alongside ```FtcRobotController``` and ```TeamCode```. Make sure you include
