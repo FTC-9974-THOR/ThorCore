@@ -1,3 +1,40 @@
+# ThorCore 1.0.0
+
+Added a new RoadRunner-compatible navigation system. This system includes support for both
+pure-odometry localization and a sensor fusion localizer that fuses readings from odometry, the IMU,
+and AprilTags.
+
+Added code for modern swerve drives. ThorCore already had code for swerve drives, but it was written
+during the very early days of swerve in FTC. Now that swerves have become more commonplace, it was
+time for an update. The new code supports swerve drives that use a motor for driving and an Axon
+servo for turning. It also uses a much simpler, more flexible set of swerve kinematics and includes
+turn-key support for RoadRunner via the new navigation system.
+
+Added PIDFv - a PIDF controller that supports both position and velocity setpoints.
+
+Added SlewRateLimiter - a tool that limits the slew rate of a signal.
+
+Added AutoHeadingHold - a driver-assist tool designed for countering heading drift during teleop.
+
+Added very basic support for complex arithmetic.
+
+Added a few circular statistics methods to MathUtilities.
+
+Removed final qualification from classes.
+
+Removed:
+ * TFDetector
+ * VIPD
+ * VPIDF
+ * Matrix
+ * OldMatrix
+ * Tensor
+ * CompositeNavSource
+ * ProfiledMovementStrategy
+ * SensorFusionNavStrategy
+ * VuMarkNavSource
+ * StandaloneStackVision
+
 # ThorCore 0.5.1
 
 Added Seeker - a NEONVision-based object tracker. In testing, it runs fast enough that the limiting 

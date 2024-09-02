@@ -64,11 +64,11 @@ public class IMUNavSource implements NavSource, BNO055IMU.AccelerationIntegrator
         parameters.accelerationIntegrationAlgorithm = this;
         parameters.calibrationDataFile = calibrationFile;
         if (!imu.initialize(parameters)) {
-            RobotLog.e("Error initializing IMU! Error: " + imu.getSystemError().toString());
+            RobotLog.e("Error initializing IMU! Error: %s", imu.getSystemError().toString());
             imu = hardwareMap.get(BNO055IMU.class, "imu 0");
             isFallback = true;
             if (!imu.initialize(parameters)) {
-                throw new RuntimeException("Both IMUs have failed! Error message: " + imu.getSystemError().toString());
+                throw new RuntimeException(String.format("Both IMUs have failed! Error message: %s", imu.getSystemError().toString()));
             }
         }
     }

@@ -79,7 +79,7 @@ public class SamplePowerPlayVision extends OpMode {
     }
 
     private void displaySignature(String name, Seeker.Signature signature) {
-        telemetry.addLine(signature.hasLock() ? name + " [LOCKED]" : name)
+        telemetry.addLine(signature.hasLock() ? String.format("%s [LOCKED]", name) : name)
                 .addData("", "")
                 .addData("X", signature.getX())
                 .addData("Y", signature.getY())

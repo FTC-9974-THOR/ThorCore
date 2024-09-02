@@ -43,8 +43,8 @@ public final class QuadratureEncoder {
 
     @RealizableFactory
     public QuadratureEncoder(HardwareMap hardwareMap, String name) {
-        a = hardwareMap.get(DigitalChannel.class, name + "-a");
-        b = hardwareMap.get(DigitalChannel.class, name + "-b");
+        a = hardwareMap.get(DigitalChannel.class, String.format("%s-a", name));
+        b = hardwareMap.get(DigitalChannel.class, String.format("%s-b", name));
         state = 0;
         accumulator = 0;
         if (a.getState()) {

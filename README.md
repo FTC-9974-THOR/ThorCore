@@ -11,7 +11,7 @@ Download the latest .aar file from the Releases page. Copy it into the ```libs``
 robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
-implementation name: "ThorCore", version: "0.5+", ext: "aar"
+implementation name: "ThorCore", version: "1.0.0", ext: "aar"
 ```
 Run a Gradle sync, and it should be all set.
 #### From Source
@@ -34,8 +34,7 @@ In ```TeamCode/build.gradle```, insert the following at the end of the file:
 ```gradle
 android {
     defaultConfig.minSdkVersion 25
-    compileOptions.sourceCompatibility JavaVersion.VERSION_1_8
-    compileOptions.targetCompatibility JavaVersion.VERSION_1_8
+    compileOptions.targetCompatibility JavaVersion.VERSION_11
 }
 
 dependencies {
@@ -49,6 +48,6 @@ built and tested with NDK version 25.1.8937393 and CMake 3.18.1, but it should w
 version of the NDK and CMake.
 
 ***
-For additional information, submit an issue or DM @fortraan#2768 on Discord (note that you'll have to be in the FTC Discord server to do so).
+For additional information, submit an issue or DM @fortraan on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v0.5.1*
+*ThorCore v1.0.0*

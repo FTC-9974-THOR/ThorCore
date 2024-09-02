@@ -99,10 +99,10 @@ public class Realizer {
             if (field.isAnnotationPresent(EEVal.class) || realizedMarked) {
                 String prefix = "";
                 if (clazz.isAnnotationPresent(Namespace.class)) {
-                    prefix = clazz.getAnnotation(Namespace.class).value() + "/";
+                    prefix = String.format("%s/", clazz.getAnnotation(Namespace.class).value());
                 }
                 try {
-                    field.set(obj, EEVals.get(prefix + getFormattedName(field), field.getType()));
+                    field.set(obj, EEVals.get(String.format("%s%s", prefix, getFormattedName(field)), field.getType()));
                 } catch (IllegalAccessException e) {
                     RobotLog.ee(TAG, e, "Cannot access annotated field \"%s\"", getFormattedName(field));
                 } catch (IllegalArgumentException e) {

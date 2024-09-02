@@ -241,7 +241,7 @@ public final class Motor implements DcMotorEx, OpModeManagerNotifier.Notificatio
         if (mode == Mode.DC_MOTOR) {
             return dcMotor.getConnectionInfo();
         } else {
-            return "REV Spark Mini - " + sparkMini.getConnectionInfo();
+            return String.format("REV Spark Mini - %s", sparkMini.getConnectionInfo());
         }
     }
 
