@@ -7,7 +7,7 @@ This is the dev branch. Some of the code here may be unfinished or unstable, but
 ### Installation
 There are 2 ways to install ThorCore.
 #### Packaged Binary
-Download the latest .aar file from the Releases page. Copy it into the ```lib``` folder under the
+Download the latest .aar file from the Releases page and put it into the ```lib``` folder under the
 ```TeamCode``` module. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
