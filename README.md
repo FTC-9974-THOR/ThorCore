@@ -11,7 +11,7 @@ Download the latest .aar file from the Releases page. Copy it into the ```libs``
 robot controller project. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
-implementation name: "ThorCore", version: "1.0.0", ext: "aar"
+implementation name: "ThorCore", version: "1.0.1", ext: "aar"
 ```
 Run a Gradle sync, and it should be all set.
 #### From Source
