@@ -1,7 +1,5 @@
 package org.ftc9974.thorcore.robot.drivetrains.swerve2;
 
-import com.qualcomm.robotcore.util.RobotLog;
-
 import org.ftc9974.thorcore.control.math.Vector2;
 
 import java.util.Arrays;
@@ -26,26 +24,13 @@ public class SwerveDrive2 {
     }
 
     private void updateModule(SwerveModule2 module, Vector2 linearVelocity, double angularVelocity) {
-        //double[] crossProduct = cross(0, 0, angularVelocity, moduleX, moduleY, 0);
-        // vel = angularVelocity x modulePosition + linearVelocity
-        //double xVel = -angularVelocity * module.position.getY() + linearVelocity.getX();
-        //double yVel = angularVelocity * module.position.getX() + linearVelocity.getY();
-
         module.setVelocity(calculateModuleKinematics(module, linearVelocity, angularVelocity));
     }
 
-    public static Vector2 calculateModuleKinematics(SwerveModule2 module, Vector2 linearVelocity, double angularVelocity) {
+    static Vector2 calculateModuleKinematics(SwerveModule2 module, Vector2 linearVelocity, double angularVelocity) {
         double xVel = -angularVelocity * module.position.getY() + linearVelocity.getX();
         double yVel = angularVelocity * module.position.getX() + linearVelocity.getY();
         return new Vector2(xVel, yVel);
-    }
-
-    private double[] cross(double ax, double ay, double az, double bx, double by, double bz) {
-        return new double[] {
-                ay * bz - az * by,
-                az * bx - ax * bz,
-                ax * by - ay * bx
-        };
     }
 
     public void update(Vector2 currentRobotLinearVelocity, double currentRobotAngularVelocity) {

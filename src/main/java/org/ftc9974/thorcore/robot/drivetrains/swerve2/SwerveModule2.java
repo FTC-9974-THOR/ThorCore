@@ -23,9 +23,9 @@ public class SwerveModule2 {
         PIDFCoefficients calculateGains(double wheelAngle, Vector2 moduleVelocity, Vector2 robotLinearVelocity, double robotAngularVelocity);
     }
 
-    private static final MotorUtilities.MotorConstants feedforward = MotorUtilities.calculateMotorConstants(
-            MathUtilities.rpmToRadPerSec(1780.0), 0.2281, 0.2, 12
-    );
+    public static GainSchedule constantGains(PIDFCoefficients coefs) {
+        return (wheelAngle, moduleVelocity, robotLinearVelocity, robotAngularVelocity) -> coefs;
+    }
 
     public DcMotorEx motor;
     public AxonCRServoPIDF servo;
@@ -42,8 +42,6 @@ public class SwerveModule2 {
 
     private final GainSchedule gainSchedule;
     private final SlewRateLimiter rateLimiter = new SlewRateLimiter(100);
-
-    private SwerveModule2 scheduleReference = this;
 
     public SwerveModule2(String name, HardwareMap hardwareMap, Vector2 position, double servoOffset, double conversionFactor, double distancePerTick, GainSchedule gainSchedule) {
         this.position = position;
@@ -66,10 +64,6 @@ public class SwerveModule2 {
     public void stop() {
         servo.servo.setPower(0);
         motor.setPower(0);
-    }
-
-    public void setScheduleReference(SwerveModule2 scheduleReference) {
-        this.scheduleReference = scheduleReference;
     }
 
     public double getDirectionSetpoint() {
@@ -113,49 +107,41 @@ public class SwerveModule2 {
     }
 
     public double getCurrentSpeed() {
-        // todo ticks to mm conversion
         return distancePerTick * motor.getVelocity();
+    }
+
+    public void update() {
+        update(Vector2.ZERO, 0);
     }
 
     public void update(Vector2 currentRobotLinearVelocity, double currentRobotAngularVelocity) {
         servo.setPosition(rateLimiter.update(servoSetpoint));
         servo.update();
 
-        // todo: gain scheduling
-        // reduce the pid gains when traveling at speed
         PIDFCoefficients gains = gainSchedule.calculateGains(
-                scheduleReference.getCurrentDirection(),
+                getCurrentDirection(),
                 SwerveDrive2.calculateModuleKinematics(this, currentRobotLinearVelocity, currentRobotAngularVelocity),
                 currentRobotLinearVelocity,
                 currentRobotAngularVelocity
         );
         servo.setTunings(gains.p, gains.i, gains.d, gains.f);
 
-        final double FULL_POWER_THRESHOLD = Math.toRadians(8);
         final double CUTOFF_THRESHOLD = Math.toRadians(30);
         double absError = Math.abs(servo.getLastError());
         double motorCommand = 0;
         if (absError < CUTOFF_THRESHOLD) {
             motorCommand = cos(absError) * motorSetpoint;
         }
-        /*double motorCommand = 0;
-        if (absError < FULL_POWER_THRESHOLD) {
-            motorCommand = motorSetpoint;
-        } else if (absError < CUTOFF_THRESHOLD) {
-            motorCommand = MathUtilities.map(absError,
-                    CUTOFF_THRESHOLD, FULL_POWER_THRESHOLD,
-                    0, motorSetpoint);
-        } else {
-            motorCommand = 0;
-        }*/
 
-        //voltageRegulator.setTargetVoltage(feedforward.computeVoltage(0, motorCommand));
         voltageRegulator.setTargetVoltage(12 * motorCommand);
-        //RobotLog.dd("SwerveModule", String.format(Locale.US, "motorCommand: %f, voltage: %f", motorCommand, voltageRegulator.getTargetVoltage()));
         motor.setPower(voltageRegulator.getRegulatedOutput());
     }
 
     public double getCurrentDraw() {
         return motor.getCurrent(CurrentUnit.AMPS);
+    }
+
+    public void setSlewRateLimit(double limit) {
+        rateLimiter.slewRate = limit;
     }
 }
