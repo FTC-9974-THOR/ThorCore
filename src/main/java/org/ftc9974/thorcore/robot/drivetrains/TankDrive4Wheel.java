@@ -10,7 +10,7 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
 /**
  * Implements a 4 wheel tank drive.
  */
-public final class TankDrive4Wheel {
+public class TankDrive4Wheel {
 
     @Hardware
     public DcMotor frontLeft, frontRight, backLeft, backRight;

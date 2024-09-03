@@ -1,10 +1,10 @@
 package org.ftc9974.thorcore.samples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.ftc9974.thorcore.OpModeEnhanced;
 import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
 
 /**
@@ -17,26 +17,21 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
  */
 @TeleOp(name = "Sample - 2 Wheel Tank Drive", group = "_ ThorCore Samples")
 @Disabled
-public class Sample2WheelTankDrive extends OpModeEnhanced {
+public class Sample2WheelTankDrive extends OpMode {
 
     // Declare a variable of type TankDrive2Wheel
     private TankDrive2Wheel rb;
 
     @Override
     public void init() {
-        // Call super.init(). Required for OpModeEnhanced to work properly.
-        super.init();
-
         // Construct a new TankDrive2Wheel object.
         rb = new TankDrive2Wheel(hardwareMap);
     }
 
     @Override
     public void loop() {
-        // Call super.loop(). Required for OpModeEnhanced to work properly.
-        super.loop();
         // Drive the robot. The first parameter is the left wheel power, and the second parameter
         // is the right wheel power. If you would prefer arcade drive, use rb.arcadeDrive instead.
-        rb.drive(gamepad1.getLeftY(), gamepad1.getRightY());
+        rb.drive(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
     }
 }

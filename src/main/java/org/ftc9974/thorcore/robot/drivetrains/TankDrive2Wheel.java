@@ -11,7 +11,7 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
  * Implements a 2 wheel tank drive.
  */
 @SuppressWarnings("WeakerAccess")
-public final class TankDrive2Wheel {
+public class TankDrive2Wheel {
 
     @Hardware
     public DcMotor leftMotor, rightMotor;

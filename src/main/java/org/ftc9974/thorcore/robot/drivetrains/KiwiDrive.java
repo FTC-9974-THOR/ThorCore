@@ -11,13 +11,12 @@ import org.ftc9974.thorcore.control.navigation.NavSource;
 import org.ftc9974.thorcore.control.PIDF;
 import org.ftc9974.thorcore.meta.Realizer;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
-import org.ftc9974.thorcore.robot.Motor;
 import org.ftc9974.thorcore.util.MathUtilities;
 
 /**
  * Implements a kiwi drive.
  */
-public final class KiwiDrive implements HolonomicDrivetrain {
+public class KiwiDrive implements HolonomicDrivetrain {
 
     @SuppressWarnings("WeakerAccess")
     @Hardware

@@ -1,12 +1,12 @@
 package org.ftc9974.thorcore.samples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.ftc9974.thorcore.OpModeEnhanced;
 import org.ftc9974.thorcore.meta.Realizer;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
 
@@ -21,7 +21,7 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
  */
 @TeleOp(name = "Sample - Realized Hardware", group = "_ ThorCore Samples")
 @Disabled
-public class SampleRealizedHardware extends OpModeEnhanced {
+public class SampleRealizedHardware extends OpMode {
 
     @Hardware
     DcMotor leftMotor, rightMotor, armMotor;
@@ -31,8 +31,6 @@ public class SampleRealizedHardware extends OpModeEnhanced {
 
     @Override
     public void init() {
-        // Call super.init(). Required for OpModeEnhanced to work.
-        super.init();
         // Call the Realizer.
         Realizer.realize(this, hardwareMap);
         // The above line is equivalent to this:
@@ -48,23 +46,21 @@ public class SampleRealizedHardware extends OpModeEnhanced {
 
     @Override
     public void loop() {
-        // Call super.loop(). Required for OpModeEnhanced to work.
-        super.loop();
-        leftMotor.setPower(gamepad1.getLeftY());
-        rightMotor.setPower(gamepad1.getRightY());
+        leftMotor.setPower(-gamepad1.left_stick_y);
+        rightMotor.setPower(-gamepad1.right_stick_y);
 
-        if (gamepad1.getA()) {
+        if (gamepad1.a) {
             armMotor.setPower(1);
-        } else if (gamepad1.getB()) {
+        } else if (gamepad1.b) {
             armMotor.setPower(-1);
         } else {
             armMotor.setPower(0);
         }
 
-        if (gamepad1.getLeftBumper()) {
+        if (gamepad1.left_bumper) {
             leftClaw.setPosition(1);
             rightClaw.setPosition(0);
-        } else if (gamepad1.getRightBumper()) {
+        } else if (gamepad1.right_bumper) {
             leftClaw.setPosition(0);
             rightClaw.setPosition(1);
         }

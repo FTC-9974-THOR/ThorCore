@@ -1,10 +1,10 @@
 package org.ftc9974.thorcore.samples;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.ftc9974.thorcore.OpModeEnhanced;
 import org.ftc9974.thorcore.robot.drivetrains.MecanumDrive;
 
 /**
@@ -19,24 +19,20 @@ import org.ftc9974.thorcore.robot.drivetrains.MecanumDrive;
  */
 @TeleOp(name = "Sample - Mecanum Drive", group = "_ ThorCore Samples")
 @Disabled
-public class SampleMecanumDrive extends OpModeEnhanced {
+public class SampleMecanumDrive extends OpMode {
 
     // Declare a variable of type MecanumDrive
     private MecanumDrive rb;
 
     @Override
     public void init() {
-        // Call super.init(). Required for OpModeEnhanced to work.
-        super.init();
         // Construct a new instance of MecanumDrive
         rb = new MecanumDrive(hardwareMap);
     }
 
     @Override
     public void loop() {
-        // Call super.loop(). Required for OpModeEnhanced to work.
-        super.loop();
         // Drive the robot. Right joystick is movement, left x-axis is turning.
-        rb.drive(gamepad1.getRightX(), gamepad1.getRightY(), gamepad1.getLeftX());
+        rb.drive(gamepad1.right_stick_x, -gamepad1.right_stick_y, gamepad1.left_stick_x);
     }
 }

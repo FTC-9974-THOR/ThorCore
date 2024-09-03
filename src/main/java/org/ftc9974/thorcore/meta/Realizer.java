@@ -7,7 +7,6 @@ import org.ftc9974.thorcore.internal.RealizableFactory;
 import org.ftc9974.thorcore.meta.annotation.EEVal;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
 import org.ftc9974.thorcore.meta.annotation.Namespace;
-import org.ftc9974.thorcore.meta.annotation.Realized;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -54,14 +53,13 @@ public class Realizer {
      * @param obj object to realize
      * @param hardwareMap hardwareMap
      */
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings({"deprecation"})
     public static void realize(Object obj, HardwareMap hardwareMap) {
         EEVals.init(hardwareMap.appContext);
         Class<?> clazz = obj.getClass();
         Field[] fields = clazz.getDeclaredFields();
-        boolean realizedMarked = clazz.isAnnotationPresent(Realized.class);
         for (Field field : fields) {
-            if (field.isAnnotationPresent(Hardware.class) || realizedMarked) {
+            if (field.isAnnotationPresent(Hardware.class)) {
                 try {
                     String formattedName = getFormattedName(field);
                     RobotLog.dd(TAG, String.format(Locale.getDefault(), "Attempting to find factory method or constructor for type %s", field.getType().getSimpleName()));
@@ -96,7 +94,7 @@ public class Realizer {
                     throw new RuntimeException(String.format(Locale.getDefault(), "Error invoking constructor for %s: %s", field.getType().getSimpleName(), e.toString()));
                 }
             }
-            if (field.isAnnotationPresent(EEVal.class) || realizedMarked) {
+            if (field.isAnnotationPresent(EEVal.class)) {
                 String prefix = "";
                 if (clazz.isAnnotationPresent(Namespace.class)) {
                     prefix = String.format("%s/", clazz.getAnnotation(Namespace.class).value());

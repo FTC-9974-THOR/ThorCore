@@ -1,3 +1,9 @@
+# ThorCore 1.0.2
+
+Refactored feedforward calculation in SwerveModule2
+
+Further trimmed old and obsolete code
+
 # ThorCore 1.0.1
 
 Updated to FTC SDK v9.2

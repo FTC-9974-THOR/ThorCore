@@ -55,4 +55,4 @@ version of the NDK and CMake.
 ***
 For additional information, submit an issue or DM @fortraan on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v1.0.1*
+*ThorCore v1.0.2*

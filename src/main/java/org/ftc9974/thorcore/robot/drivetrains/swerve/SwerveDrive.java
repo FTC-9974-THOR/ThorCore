@@ -10,7 +10,7 @@ import org.ftc9974.thorcore.meta.annotation.Hardware;
 import org.ftc9974.thorcore.robot.MotorType;
 import org.ftc9974.thorcore.util.MathUtilities;
 
-public final class SwerveDrive implements HolonomicDrivetrain {
+public class SwerveDrive implements HolonomicDrivetrain {
 
     public SwerveModule leftModule,
                         rightModule;

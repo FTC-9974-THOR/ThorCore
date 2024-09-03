@@ -38,7 +38,7 @@ import java.util.Set;
 // todo work in progress
 @I2cDeviceType
 @DeviceProperties(xmlTag = "Pixy2", name = "Pixy2", description = "Pixy2 CMUcam5 Vision Camera", compatibleControlSystems = {ControlSystem.REV_HUB})
-public final class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Optional<LynxModule>> {
+public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Optional<LynxModule>> {
 
     private static final String TAG = "Pixy2";
 

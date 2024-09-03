@@ -1,13 +1,10 @@
 package org.ftc9974.thorcore.robot;
 
-import android.os.SystemClock;
-
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public final class StallDetector {
+public class StallDetector {
 
     private DcMotorEx motor;
     private double stallThreshold;

@@ -1,5 +1,6 @@
 package org.ftc9974.thorcore.util;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -11,28 +12,19 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.ftc9974.thorcore.OpModeEnhanced;
-import org.ftc9974.thorcore.util.MathUtilities;
-import org.ftc9974.thorcore.util.StringUtilities;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 @TeleOp(name = "Hardware Debugger", group = "_ ThorCore")
-public class Debugger extends OpModeEnhanced {
+public class Debugger extends OpMode {
 
     @Override
-    public void init() {
-        super.init();
-    }
+    public void init() { }
 
     @Override
     public void loop() {
-        super.loop();
         telemetry.addLine("=== Motors ===");
         for (Map.Entry<String, DcMotor> entry : hardwareMap.dcMotor.entrySet()) {
             telemetry.addData("Name", entry.getKey());
@@ -111,13 +103,4 @@ public class Debugger extends OpModeEnhanced {
             }
         }
     }
-
-    // TODO
-    /*private <T extends HardwareDevice> void displayHardware(Class<T> hardwareType) {
-        String[] splitName = hardwareType.getSimpleName().split("(?=\\p{Upper})");
-        telemetry.addLine(String.format(Locale.getDefault(), "=== %ss ===", StringUtilities.join(" ", splitName)));
-        for (T device : hardwareMap.getAll(hardwareType)) {
-
-        }
-    }*/
 }

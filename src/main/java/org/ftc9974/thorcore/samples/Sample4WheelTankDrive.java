@@ -1,10 +1,10 @@
 package org.ftc9974.thorcore.samples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.ftc9974.thorcore.OpModeEnhanced;
 import org.ftc9974.thorcore.robot.drivetrains.TankDrive4Wheel;
 
 /**
@@ -20,27 +20,23 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive4Wheel;
  */
 @TeleOp(name = "Sample - 4 Wheel Tank Drive", group = "_ ThorCore Samples")
 @Disabled
-public class Sample4WheelTankDrive extends OpModeEnhanced {
+public class Sample4WheelTankDrive extends OpMode {
 
     // Declare a variable of type TankDrive4Wheel
     private TankDrive4Wheel rb;
 
     @Override
     public void init() {
-        // Call super.init(). Required for OpModeEnhanced to work.
-        super.init();
         // Construct a new instance of TankDrive4Wheel.
         rb = new TankDrive4Wheel(hardwareMap);
     }
 
     @Override
     public void loop() {
-        // Call super.loop(). Required for OpModeEnhanced to work.
-        super.loop();
         // Drive using tank drive.
-        rb.drive(gamepad1.getLeftY(), gamepad1.getRightY());
+        rb.drive(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
         // Or, if you prefer arcade drive, comment out the above line and uncomment out the line
         // below
-        //rb.arcadeDrive(gamepad1.getRightY(), gamepad1.getRightX());
+        //rb.arcadeDrive(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
     }
 }

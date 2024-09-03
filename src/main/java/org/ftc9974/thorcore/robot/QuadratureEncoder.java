@@ -11,7 +11,7 @@ import org.ftc9974.thorcore.internal.RealizableFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class QuadratureEncoder {
+public class QuadratureEncoder {
 
     private DigitalChannel a, b;
     private byte state;

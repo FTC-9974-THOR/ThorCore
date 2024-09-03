@@ -2,11 +2,11 @@ package org.ftc9974.thorcore.samples;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.ftc9974.thorcore.OpModeEnhanced;
 import org.ftc9974.thorcore.control.PIDF;
 import org.ftc9974.thorcore.meta.Realizer;
 import org.ftc9974.thorcore.meta.annotation.Hardware;
@@ -19,7 +19,7 @@ import org.ftc9974.thorcore.robot.drivetrains.TankDrive2Wheel;
  */
 @TeleOp(name = "Sample - PIDF", group = "_ ThorCore Samples")
 @Disabled
-public class SamplePIDF extends OpModeEnhanced {
+public class SamplePIDF extends OpMode {
 
     // This will look for an imu called simply "imu". If you are using REV hubs, the imu is configured
     // this way by default.
@@ -41,8 +41,6 @@ public class SamplePIDF extends OpModeEnhanced {
 
     @Override
     public void init() {
-        // Call super.init(). Required for OpModeEnhanced to work.
-        super.init();
 
         // Use the Realizer to realize this class
         Realizer.realize(this, hardwareMap);
@@ -81,8 +79,6 @@ public class SamplePIDF extends OpModeEnhanced {
 
     @Override
     public void loop() {
-        // Call super.loop(). Required for OpModeEnhanced to work.
-        super.loop();
 
         double currentHeading = imu.getAngularOrientation().toAxesOrder(AxesOrder.XYZ).thirdAngle;
 

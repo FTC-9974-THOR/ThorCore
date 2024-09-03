@@ -11,7 +11,7 @@ import org.ftc9974.thorcore.internal.RealizableFactory;
 import org.ftc9974.thorcore.robot.MotorType;
 import org.ftc9974.thorcore.util.MathUtilities;
 
-public final class SwerveModule {
+public class SwerveModule {
 
     private static final double AT_DIRECTION_THRESHOLD = Math.toRadians(50);
 

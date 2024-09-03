@@ -12,12 +12,6 @@ import java.lang.annotation.Target;
  * this annotation above a method with the following signature:
  * {@code public [type of custom hardware class] [some name](String name, HardwareMap hardwareMap)}
  * Or, you can put it on a constructor that takes the same arguments.
- *
- * For an example of how this works, see {@link org.ftc9974.thorcore.robot.Motor}
- *
- * This is not the... ideal way to do this, but it's the only way I've found. :(
- *
- * @see org.ftc9974.thorcore.robot.Motor
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

@@ -5,7 +5,6 @@ import static java.lang.Math.sin;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -14,7 +13,6 @@ import org.ftc9974.thorcore.control.VoltageRegulator;
 import org.ftc9974.thorcore.control.math.Vector2;
 import org.ftc9974.thorcore.robot.AxonCRServoPIDF;
 import org.ftc9974.thorcore.util.MathUtilities;
-import org.ftc9974.thorcore.util.MotorUtilities;
 
 public class SwerveModule2 {
 
@@ -33,8 +31,7 @@ public class SwerveModule2 {
     public final Vector2 position;
 
     private final double servoOffset;
-    private final double conversionFactor;
-    private final double distancePerTick;
+    private final double feedforwardCoef;
 
     private double servoSetpoint;
     private double motorSetpoint;
@@ -43,11 +40,10 @@ public class SwerveModule2 {
     private final GainSchedule gainSchedule;
     private final SlewRateLimiter rateLimiter = new SlewRateLimiter(100);
 
-    public SwerveModule2(String name, HardwareMap hardwareMap, Vector2 position, double servoOffset, double conversionFactor, double distancePerTick, GainSchedule gainSchedule) {
+    public SwerveModule2(String name, HardwareMap hardwareMap, Vector2 position, double servoOffset, double wheelRadius, double gearRatio, double motorFreeSpeed, GainSchedule gainSchedule) {
         this.position = position;
         this.servoOffset = servoOffset;
-        this.conversionFactor = conversionFactor;
-        this.distancePerTick = distancePerTick;
+        this.feedforwardCoef = gearRatio / (wheelRadius * motorFreeSpeed);
         this.gainSchedule = gainSchedule;
 
         motor = hardwareMap.get(DcMotorEx.class, String.format("%s-motor", name));
@@ -75,7 +71,7 @@ public class SwerveModule2 {
     }
 
     public void setSpeed(double speed) {
-        motorSetpoint = conversionFactor * speed;
+        motorSetpoint = feedforwardCoef * speed;
     }
 
     public void setVelocity(Vector2 velocity) {
@@ -90,24 +86,14 @@ public class SwerveModule2 {
             }
 
             setDirectionSetpoint(heading);
-            motorSetpoint = conversionFactor * magnitude;
+            motorSetpoint = feedforwardCoef * magnitude;
         } else {
             motorSetpoint = 0;
         }
     }
 
-    public Vector2 getCurrentVelocity() {
-        double speed = getCurrentSpeed();
-        double angle = getCurrentDirection();
-        return new Vector2(speed * cos(angle), speed * sin(angle));
-    }
-
     public double getCurrentDirection() {
         return MathUtilities.wraparound(servo.getPosition() - servoOffset, 0, 2 * Math.PI);
-    }
-
-    public double getCurrentSpeed() {
-        return distancePerTick * motor.getVelocity();
     }
 
     public void update() {
