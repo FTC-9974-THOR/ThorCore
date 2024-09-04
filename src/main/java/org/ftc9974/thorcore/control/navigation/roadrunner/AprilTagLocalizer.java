@@ -30,6 +30,7 @@ public class AprilTagLocalizer {
                 // i'm not sure what caused it, but i encountered an error where this field would be
                 // null. thus, i'm checking it just to be safe.
                 .filter(detection -> detection.ftcPose != null)
+                // the pose estimate starts to get quite noisy at long range, so filter those out
                 .filter(detection -> detection.ftcPose.range < 1500)
                 .map(this::calculateRobotPose)
                 .collect(Collectors.toList());

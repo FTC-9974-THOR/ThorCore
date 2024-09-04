@@ -1,14 +1,10 @@
 package org.ftc9974.thorcore.util;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import androidx.annotation.NonNull;
 
 import org.ftc9974.thorcore.control.math.Complex;
 import org.ftc9974.thorcore.control.math.Vector2;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -18,10 +14,14 @@ import java.util.function.Function;
  */
 public final class MathUtilities {
 
-    private static final String TAG = "org.ftc9974.thorcore.utils.MathUtilites";
-
     private MathUtilities() {}
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param bytes values to compare
+     * @return the smallest value
+     */
     public static byte min(byte... bytes) {
         byte min = Byte.MAX_VALUE;
         for (byte b : bytes) {
@@ -32,9 +32,15 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param chars values to compare
+     * @return the smallest value
+     */
     public static char min(char... chars) {
         // I actually can't think of a time this would be useful, but you never know
-        char min = 65535;
+        char min = Character.MAX_VALUE;
         for (char c : chars) {
             if (c < min) {
                 min = c;
@@ -43,6 +49,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param shorts values to compare
+     * @return the smallest value
+     */
     public static short min(short... shorts) {
         short min = Short.MAX_VALUE;
         for (short s : shorts) {
@@ -53,6 +65,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param ints values to compare
+     * @return the smallest value
+     */
     public static int min(int... ints) {
         int min = Integer.MAX_VALUE;
         for (int i : ints) {
@@ -63,6 +81,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param longs values to compare
+     * @return the smallest value
+     */
     public static long min(long... longs) {
         long min = Long.MAX_VALUE;
         for (long l : longs) {
@@ -73,6 +97,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param floats values to compare
+     * @return the smallest value
+     */
     public static float min(float... floats) {
         float min = Float.MAX_VALUE;
         for (float f : floats) {
@@ -83,6 +113,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the smallest of the arguments.
+     *
+     * @param doubles values to compare
+     * @return the smallest value
+     */
     public static double min(double... doubles) {
         double min = Double.MAX_VALUE;
         for (double d : doubles) {
@@ -93,6 +129,12 @@ public final class MathUtilities {
         return min;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param bytes values to compare
+     * @return the smallest value
+     */
     public static byte max(byte... bytes) {
         byte max = Byte.MIN_VALUE;
         for (byte b : bytes) {
@@ -103,9 +145,15 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param chars values to compare
+     * @return the smallest value
+     */
     public static char max(char... chars) {
         // I actually can't think of a time this would be useful, but you never know
-        char max = 0;
+        char max = Character.MIN_VALUE;
         for (char c : chars) {
             if (c > max) {
                 max = c;
@@ -114,6 +162,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param shorts values to compare
+     * @return the smallest value
+     */
     public static short max(short... shorts) {
         short max = Short.MIN_VALUE;
         for (short s : shorts) {
@@ -124,6 +178,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param ints values to compare
+     * @return the smallest value
+     */
     public static int max(int... ints) {
         int max = Integer.MIN_VALUE;
         for (int i : ints) {
@@ -134,6 +194,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param longs values to compare
+     * @return the smallest value
+     */
     public static long max(long... longs) {
         long max = Long.MIN_VALUE;
         for (long l : longs) {
@@ -144,6 +210,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param floats values to compare
+     * @return the smallest value
+     */
     public static float max(float... floats) {
         float max = -Float.MAX_VALUE;
         for (float f : floats) {
@@ -154,6 +226,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the largest of the arguments.
+     *
+     * @param doubles values to compare
+     * @return the smallest value
+     */
     public static double max(double... doubles) {
         double max = -Double.MAX_VALUE;
         for (double d : doubles) {
@@ -164,6 +242,12 @@ public final class MathUtilities {
         return max;
     }
 
+    /**
+     * Returns the sum of the arguments.
+     *
+     * @param doubles addends
+     * @return sum of the addends
+     */
     public static double sum(double... doubles) {
         double sum = 0;
         for (double aDouble : doubles) {
@@ -172,6 +256,12 @@ public final class MathUtilities {
         return sum;
     }
 
+    /**
+     * Returns the smallest of the absolute values of the arguments.
+     *
+     * @param ints arguments
+     * @return the smallest absolute value
+     */
     public static int absMin(int... ints) {
         int ret = Integer.MAX_VALUE;
         for (int possibleMin : ints) {
@@ -183,6 +273,12 @@ public final class MathUtilities {
         return ret;
     }
 
+    /**
+     * Returns the smallest of the absolute values of the arguments.
+     *
+     * @param doubles arguments
+     * @return the smallest absolute value
+     */
     public static double absMin(double... doubles) {
         double ret = Double.POSITIVE_INFINITY;
         for (double possibleMin : doubles) {
@@ -194,6 +290,12 @@ public final class MathUtilities {
         return ret;
     }
 
+    /**
+     * Returns the largest of the absolute values of the arguments.
+     *
+     * @param ints arguments
+     * @return the largest absolute value
+     */
     public static int absMax(int... ints) {
         int ret = -1;
         for (int possibleMax : ints) {
@@ -205,6 +307,12 @@ public final class MathUtilities {
         return ret;
     }
 
+    /**
+     * Returns the largest of the absolute values of the arguments.
+     *
+     * @param doubles arguments
+     * @return the largest absolute value
+     */
     public static double absMax(double... doubles) {
         double ret = -1;
         for (double possibleMax : doubles) {
@@ -227,7 +335,6 @@ public final class MathUtilities {
      * @param <R> type of function's return
      * @return integral of function
      */
-    @TargetApi(Build.VERSION_CODES.N)
     public static <T extends Comparable<T>, R extends Comparable<R>> R integrate(@NonNull Function<T, R> function,
                                                                                  @NonNull T lowBound,
                                                                                  @NonNull T highBound,
@@ -244,14 +351,47 @@ public final class MathUtilities {
         return sum;
     }
 
+    /**
+     * Linearly maps a value from an input range to an output range. Equivalent to Arduino's map
+     * function. Note that inputMin does not have to be less than inputMax, nor does outputMin have
+     * to be less than outputMax. This is useful for reversing ranges.
+     *
+     * Example: Mapping feedback voltage from an Axon servo to a position
+     * position = map(voltage, 0, 3.3, 0, 2 * Math.PI);
+     * Example: Mapping a servo position in microseconds to a normalized position
+     * position = map(microseconds, 800, 2200, 0, 1);
+     *
+     * @param x input value
+     * @param inputMin lower bound of input range
+     * @param inputMax upper bound of input range
+     * @param outputMin lower bound of output range
+     * @param outputMax upper bound of output range
+     * @return input value mapped to the output range
+     */
     public static double map(double x, double inputMin, double inputMax, double outputMin, double outputMax) {
         return ((outputMax - outputMin) / (inputMax - inputMin)) * (x - inputMin) + outputMin;
     }
 
+    /**
+     * Linear interpolates between from and to based on interpolation parameter t.
+     *
+     * @param from first interpolation value
+     * @param to second interpolation value
+     * @param t interpolation parameter (valid range is 0-1 inclusive)
+     * @return interpolated value
+     */
     public static double lerp(double from, double to, double t) {
         return (1 - t) * from + t * to;
     }
 
+    /**
+     * Linear interpolates between from and to based on interpolation parameter t.
+     *
+     * @param from first interpolation value
+     * @param to second interpolation value
+     * @param t interpolation parameter (valid range is 0-1 inclusive)
+     * @return interpolated value
+     */
     public static Vector2 lerp(Vector2 from, Vector2 to, double t) {
         return new Vector2(lerp(from.getX(), to.getX(), t), lerp(from.getY(), to.getY(), t));
     }
@@ -275,6 +415,12 @@ public final class MathUtilities {
         }
     }
 
+    /**
+     * Returns the arithmetic mean of the arguments.
+     *
+     * @param values arguments
+     * @return average of the arguments
+     */
     public static double average(int... values) {
         if (values.length == 0) return 0;
 
@@ -285,6 +431,12 @@ public final class MathUtilities {
         return sum / (double) values.length;
     }
 
+    /**
+     * Returns the arithmetic mean of the arguments.
+     *
+     * @param values arguments
+     * @return average of the arguments
+     */
     public static double average(double... values) {
         if (values.length == 0) return 0;
 
@@ -331,8 +483,8 @@ public final class MathUtilities {
 
         double real = 0, imag = 0;
         for (double value : values) {
-            // this is normally done with complex numbers, but applying the law of powers of powers
-            // and Euler's identity, we can just use trig and a pair of real numbers.
+            // this is normally done with complex numbers, but by applying the law of powers of
+            // powers and Euler's identity we can just use trig and a pair of real numbers.
             real += Math.cos(n * value);
             imag += Math.sin(n * value);
         }
@@ -432,25 +584,49 @@ public final class MathUtilities {
         return new double[] {Math.toRadians(hue), saturation, lightness};
     }
 
-    public static boolean withinRange(double x, double lowInclusive, double highInclusive) {
-        return x >= lowInclusive && x <= highInclusive;
+    /**
+     * Checks if a value is within the specified range.
+     *
+     * @param x value
+     * @param low lower bound of the range, inclusive
+     * @param high upper bound of the range, inclusive
+     * @return true if high ≥ x ≥ low, false otherwise
+     */
+    public static boolean withinRange(double x, double low, double high) {
+        return x >= low && x <= high;
     }
 
+    /**
+     * Converts from inches to millimeters.
+     *
+     * @param inches distance in inches
+     * @return the equivalent distance in millimeters
+     */
     public static double inchesToMM(double inches) {
         return inches * 25.4;
     }
 
+    /**
+     * Converts from millimeters to inches.
+     *
+     * @param mm distance in millimeters
+     * @return the equivalent distance in inches
+     */
     public static double mmToInches(double mm) {
         return mm / 25.4;
     }
 
+    /**
+     * Converts from revolutions per minute to radians per second.
+     *
+     * @param rpm speed in revolutions per minute
+     * @return equivalent speed in radians per second
+     */
     public static double rpmToRadPerSec(double rpm) {
         return 0.1047 * rpm;
     }
 
     /**
-     * *sergal noises*
-     *
      * Multi-dimensional scalar interpolation
      *
      * (weight_0 * value_0 + weight_1 + value_1 + ... + weight_n * value_n) / (weight_0 + ... + weight_n)
@@ -472,6 +648,14 @@ public final class MathUtilities {
         return numerator / denominator;
     }
 
+    /**
+     * Constrains a value to be within the specified range.
+     *
+     * @param x input value
+     * @param low lower bound of the range, inclusive
+     * @param high upper bound of the range, inclusive
+     * @return x if x is within the range, otherwise returns the bound of the range closest to x
+     */
     public static int constrain(int x, int low, int high) {
         if (x < low) {
             return low;
@@ -481,6 +665,14 @@ public final class MathUtilities {
         return x;
     }
 
+    /**
+     * Constrains a value to be within the specified range.
+     *
+     * @param x input value
+     * @param low lower bound of the range, inclusive
+     * @param high upper bound of the range, inclusive
+     * @return x if x is within the range, otherwise returns the bound of the range closest to x
+     */
     public static double constrain(double x, double low, double high) {
         if (x < low) {
             return low;
@@ -490,6 +682,21 @@ public final class MathUtilities {
         return x;
     }
 
+    /**
+     * Wraps a value around within the specified range. Useful for working with cyclic values such
+     * as headings and angles. Similar to modulo, but allows for ranges that start at values other
+     * than zero. If the low end of the range is zero, this function is effectively equivalent to
+     * the modulo operator.
+     *
+     * Example:
+     * wraparound(3pi, 0, 2pi) -> pi
+     * wraparound(2pi, -pi, pi) -> 0
+     *
+     * @param x value
+     * @param low low bound of the range
+     * @param high high bound of the range
+     * @return wrapped value
+     */
     public static int wraparound(int x, int low, int high) {
         // check for valid low & high arguments, because this method will get stuck in an infinite
         // loop if low is greater than high.
@@ -506,6 +713,21 @@ public final class MathUtilities {
         return x;
     }
 
+    /**
+     * Wraps a value around within the specified range. Useful for working with cyclic values such
+     * as headings and angles. Similar to modulo, but allows for ranges that start at values other
+     * than zero. If the low end of the range is zero, this function is effectively equivalent to
+     * the modulo operator.
+     *
+     * Example:
+     * wraparound(3pi, 0, 2pi) -> pi
+     * wraparound(2pi, -pi, pi) -> 0
+     *
+     * @param x value
+     * @param low low bound of the range
+     * @param high high bound of the range
+     * @return wrapped value
+     */
     public static double wraparound(double x, double low, double high) {
         // check for valid low & high arguments, because this method will get stuck in an infinite
         // loop if low is greater than high.

@@ -1,11 +1,10 @@
-package org.ftc9974.thorcore.samples.seasonal.powerplay;
+package org.ftc9974.thorcore.seasonal.powerplay;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.ftc9974.thorcore.seasonal.powerplay.PowerPlaySeeker;
 import org.ftc9974.thorcore.util.TimingUtilities;
 import org.ftc9974.thorcore.vision.Seeker;
 

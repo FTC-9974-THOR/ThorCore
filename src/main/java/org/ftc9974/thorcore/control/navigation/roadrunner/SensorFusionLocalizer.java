@@ -17,7 +17,6 @@ public class SensorFusionLocalizer implements Localizer {
 
     public Pose2d poseEstimate;
 
-    private Pose2d lastOdometryPose;
     private double lastImuHeading;
     private final double imuHeadingOffset;
 
@@ -30,7 +29,6 @@ public class SensorFusionLocalizer implements Localizer {
         this.imuNavSource = imuNavSource;
 
         poseEstimate = startPose;
-        lastOdometryPose = odometryLocalizer.pose;
         lastImuHeading = imuNavSource.getHeading();
         imuHeadingOffset = -imuNavSource.getHeading() + poseEstimate.getHeading();
     }
@@ -74,8 +72,6 @@ public class SensorFusionLocalizer implements Localizer {
         }
 
         // compute pose delta measured by the odometry
-        //Pose2d odometryPoseDelta = odometryLocalizer.pose.minus(lastOdometryPose);
-        //lastOdometryPose = odometryLocalizer.pose;
         Pose2d odometryRelativePoseDelta = odometryLocalizer.relativePoseDelta;
         Pose2d odometryPoseDelta = new Pose2d(
                 odometryRelativePoseDelta.vec().rotated(t),
