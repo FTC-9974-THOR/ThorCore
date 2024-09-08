@@ -11,7 +11,7 @@ Download the latest .aar file from the Releases page and put it into the ```lib`
 ```TeamCode``` module. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
-implementation files("lib/ThorCore-1.0.1.aar")
+implementation files("lib/ThorCore-1.1.0.aar")
 ```
 Run a Gradle sync, and it should be all set.
 
@@ -55,4 +55,4 @@ version of the NDK and CMake.
 ***
 For additional information, submit an issue or DM @fortraan on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v1.0.2*
+*ThorCore v1.1.0*
