@@ -421,12 +421,15 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
     }
 
     private static int byte2Uint(byte b) {
-        if (b < 0) return b + 128;
+        // java uses signed integers for everything. this means that if you read an unsigned byte
+        // into a java byte and the unsigned byte is greater than 0x7f, java will interpret it as a
+        // negative number. this code corrects for that.
+        if (b < 0) return b + 256;
         else return b;
     }
 
     private static byte uint2Byte(int i) {
-        if (i > Byte.MAX_VALUE) return (byte) (i + Byte.MIN_VALUE);
+        if (i > Byte.MAX_VALUE) return (byte) (i - 256);
         else return (byte) i;
     }
 }
