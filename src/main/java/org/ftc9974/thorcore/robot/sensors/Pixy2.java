@@ -1,48 +1,41 @@
 package org.ftc9974.thorcore.robot.sensors;
 
-import androidx.annotation.NonNull;
+import android.util.Size;
 
-import com.qualcomm.hardware.lynx.LynxI2cDeviceSynch;
-import com.qualcomm.hardware.lynx.LynxI2cDeviceSynchV2;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxNackException;
 import com.qualcomm.hardware.lynx.commands.LynxCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxI2cReadMultipleBytesCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxI2cReadSingleByteCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxI2cReadStatusQueryCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxI2cReadStatusQueryResponse;
 import com.qualcomm.hardware.lynx.commands.core.LynxI2cWriteMultipleBytesCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxI2cWriteSingleByteCommand;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.ControlSystem;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDeviceWithParameters;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple;
-import com.qualcomm.robotcore.hardware.TimestampedI2cData;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties;
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.ftc9974.thorcore.control.math.Vector2;
 import org.ftc9974.thorcore.internal.CommunicationException;
-import org.ftc9974.thorcore.internal.LynxI2cDeviceSynchEx;
-import org.ftc9974.thorcore.util.StringUtilities;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
-// todo work in progress
 @I2cDeviceType
 @DeviceProperties(xmlTag = "Pixy2", name = "Pixy2", description = "Pixy2 CMUcam5 Vision Camera", compatibleControlSystems = {ControlSystem.REV_HUB})
 public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Optional<LynxModule>> {
 
     private static final String TAG = "Pixy2";
-
-    private static final byte[] EMPTY_DATA = new byte[0];
 
     public enum PacketType {
         GET_VERSION(14),
@@ -67,14 +60,14 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
         // Video
         GET_RGB(112);
 
-        private byte bVal;
+        private final byte bVal;
 
         PacketType(int bVal) {
-            this.bVal = (byte) bVal;
+            this.bVal = uint2Byte(bVal);
         }
     }
 
-    public class Version {
+    public static class Version {
         public int hardwareVersion, firmwareBuild;
         public int majorFirmware, minorFirmware;
         public String firmwareType;
@@ -86,9 +79,45 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
             minorFirmware = byte2Uint(payload[3]);
             firmwareBuild = byte2Uint(payload[4]);
             firmwareBuild |= byte2Uint(payload[5]) << 8;
-            byte[] firmwareString = new byte[payload.length - 6];
-            System.arraycopy(payload, 6, firmwareString, 0, firmwareString.length);
-            firmwareType = new String(firmwareString);
+            firmwareType = new String(payload, 6, payload.length - 6);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format(Locale.getDefault(),
+                    "HW: %d FW: %d.%d.%d/%s",
+                    hardwareVersion, majorFirmware, minorFirmware, firmwareBuild, firmwareType);
+        }
+    }
+
+    public static class Block {
+        public @IntRange(from = 0, to = 255) int signature;
+        public @IntRange(from = 0, to = 315) int x;
+        public @IntRange(from = 0, to = 207) int y;
+        public @IntRange(from = 0, to = 316) int width;
+        public @IntRange(from = 0, to = 208) int height;
+        public @IntRange(from = -180, to = 180) int angle; // only works with color codes
+        public @IntRange(from = 0, to = 255) int trackingIndex;
+        // unfortunately, due to a firmware bug, we're not able to get age of the block.
+
+        private Block(byte[] payload) {
+            ByteBuffer buf = ByteBuffer.wrap(payload).order(ByteOrder.LITTLE_ENDIAN);
+            signature = buf.getShort();
+            x = buf.getShort();
+            y = buf.getShort();
+            width = buf.getShort();
+            height = buf.getShort();
+            angle = buf.getShort();
+            trackingIndex = byte2Uint(buf.get());
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format(Locale.getDefault(),
+                    "sig: %d x: %d y: %d w: %d h: %d angle: %d idx: %d",
+                    signature, x, y, width, height, angle, trackingIndex);
         }
     }
 
@@ -127,112 +156,148 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
 
     // API methods
 
-    // as far as I can tell, everything but the last 1 or 2 bytes from readData() are correct. this
-    // causes the first letter of the firmwareType string to be corrupted.
-    public Version getPixyVersion() {
-        writePacket(PacketType.GET_VERSION, EMPTY_DATA);
-        byte[] payload = readData();
-        if (payload == null) {
-            throw new CommunicationException(String.format("Pixy2 [%s]", deviceClient.getI2cAddr().toString()), "I2C Failure");
-        }
+    public @Nullable Version getPixyVersion() {
+        writePacket(PacketType.GET_VERSION);
+        byte[] payload = readPacket();
+        if (payload == null) return null;
         return new Version(payload);
     }
 
-    // not working in the slightest; returns garbage data
-    // maybe caused by byte being stored as two's complement?
-    public Vector2 getResolution() {
-        byte[] data = {0};
-        writePacket(PacketType.GET_RESOLUTION, data);
-        byte[] payload = readData();
+    public @Nullable Size getResolution() {
+        writePacket(PacketType.GET_RESOLUTION);
+        byte[] payload = readPacket();
+        if (payload == null) return null;
         int x = byte2Uint(payload[0]);
         x |= byte2Uint(payload[1]) << 8;
         int y = byte2Uint(payload[2]);
         y |= byte2Uint(payload[3]) << 8;
-        return new Vector2(x, y);
+        return new Size(x, y);
     }
 
-    // seems to work correctly
-    public void setLED(int r, int g, int b) {
-        byte[] data = {
-                (byte) r,
-                (byte) g,
-                (byte) b
-        };
-        writePacket(PacketType.SET_RGB_LED, data);
+    public void setCameraBrightness(@IntRange(from = 0, to = 255) int brightness) {
+        writePacket(PacketType.SET_CAMERA_BRIGHTNESS, new byte[] {uint2Byte(brightness)});
+        // eat ACK packet
         readPacket();
     }
 
-    // seems to work correctly
+    public void setServos(@IntRange(from = 0, to = 511) int servo0,
+                          @IntRange(from = 0, to = 511) int servo1) {
+        byte[] payload = new byte[4];
+        payload[0] = uint2Byte(servo0 & 0xff);
+        payload[1] = uint2Byte(servo0 >> 8);
+        payload[2] = uint2Byte(servo1 & 0xff);
+        payload[3] = uint2Byte(servo1 >> 8);
+        writePacket(PacketType.SET_SERVOS, payload);
+        // eat ACK packet
+        readPacket();
+    }
+
+    public void setLED(@IntRange(from = 0, to = 255) int r,
+                       @IntRange(from = 0, to = 255) int g,
+                       @IntRange(from = 0, to = 255) int b) {
+        byte[] data = {
+                uint2Byte(r),
+                uint2Byte(g),
+                uint2Byte(b)
+        };
+        writePacket(PacketType.SET_RGB_LED, data);
+        // eat the ACK packet
+        readPacket();
+    }
+
     public void setLamp(boolean upper, boolean lower) {
         byte[] data = {
                 (byte) ((upper) ? 1 : 0),
                 (byte) ((lower) ? 1 : 0)
         };
         writePacket(PacketType.SET_LAMP, data);
+        // eat the ACK packet
         readPacket();
+    }
+
+    public int getFPS() {
+        writePacket(PacketType.GET_FPS);
+        byte[] payload = readPacket();
+        if (payload == null) return -1;
+        return payload[0] + (payload[1] << 8) + (payload[2] << 16) + (payload[3] << 24);
+    }
+
+    public List<Block> getBlocks(@IntRange(from = 0, to = 255) int sigmap,
+                                           @IntRange(from = 0, to = 18) int maxBlocks) {
+        byte[] payload = new byte[] {
+                uint2Byte(sigmap),
+                uint2Byte(maxBlocks)
+        };
+        writePacket(PacketType.GET_BLOCKS, payload);
+
+        // the payload length of this response can exceed the 100-byte maximum read size of the rev
+        // hub I2C stack. for that reason, we need to be a bit more hands-on here than the other API
+        // calls. first, we read the header.
+        byte[] packetHeader = readMultipleBytes(5);
+        int dataLength = byte2Uint(packetHeader[3]);
+        // unfortunately, dataLength maxes out at 255. that's only enough for 18 blocks. blocks are
+        // 14 bytes each, so to find the number of blocks we'll be processing, divide dataLength by
+        // 14, using integer division to round down.
+        int numBlocks = dataLength / 14;
+        List<Block> blocks = new ArrayList<>(numBlocks);
+        for (int i = 0; i < numBlocks; i++) {
+            // ask for 13 bytes. 14 will actually be read, with the 14th lost to the firmware bug.
+            payload = readMultipleBytes(13);
+            blocks.add(new Block(payload));
+        }
+
+        // make sure we clean up the rest of the payload, if any. if everything is working properly,
+        // this shouldn't ever happen. however, if it was to happen and this check wasn't here, it
+        // would break *everything*.
+        int remaining = dataLength % 14;
+        if (remaining > 0) {
+            readMultipleBytes(remaining);
+        }
+
+        return blocks;
     }
 
     // Internal methods
 
-    private void writePacket(PacketType packetType, byte[] data) {
-        byte dataLength = (byte) data.length;
+    private void writePacket(PacketType packetType) {
+        writePacket(packetType, null);
+    }
+
+    private void writePacket(PacketType packetType, @Nullable byte[] data) {
+        byte dataLength = data == null ? 0 : uint2Byte(data.length);
         byte[] packet = new byte[4 + dataLength];
-        packet[0] = (byte) 0xae;
-        packet[1] = (byte) 0xc1;
+        // todo this was working with just normal casts to byte. make sure this still works
+        packet[0] = uint2Byte(0xae);
+        packet[1] = uint2Byte(0xc1);
         packet[2] = packetType.bVal;
         packet[3] = dataLength;
         if (dataLength > 0) {
             System.arraycopy(data, 0, packet, 4, dataLength);
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append("Writing data: ");
-        for (byte datum : packet) {
-            builder.append(String.format("0x%02x (%s)", datum, Integer.toBinaryString(byte2Uint(datum))));
-            builder.append(" ");
-        }
-        RobotLog.vv(TAG, builder.toString());
         writeMultipleBytes(packet);
     }
 
-    private byte[] readPacket() {
-        // packet header always seems to be read correctly
-        byte[] packetHeader = readMultipleBytes(6);
+    private @Nullable byte[] readPacket() {
+        // the actual header is 6 bytes long. however, due to a rev firmware bug, the rev hub will
+        // actually read one more byte than it's supposed to and discards the byte. luckily, the
+        // last byte in the header is the high 8 bits of the checksum. as long as we have the lower
+        // 8 bits of the checksum, we can still do a pretty good job of error checking. since the
+        // checksum is just the sum of all the payload bytes, the upper bits don't really change
+        // much. we can just check the lower byte of the checksum. the only way that can fail is if
+        // the errors in the payload add up to exactly 256. it's not 100% perfect, but it's better
+        // than nothing.
+        byte[] packetHeader = readMultipleBytes(5);
         int dataLength = byte2Uint(packetHeader[3]);
         if (dataLength > 0) {
             int checksum = byte2Uint(packetHeader[4]);
-            checksum |= byte2Uint(packetHeader[5]) << 8;
-
-            byte[] data = readMultipleBytes(dataLength);
-            // the last 2 bytes of the packet data are always 0x00 0x80. why?
-
-            int sum = 0;
-            for (int i = 0; i < dataLength; i++) {
-                sum += byte2Uint(data[i]);
-            }
-            // always fails due to the aforementioned 0x00 0x80 in the packet data.
-            if (sum != checksum) {
-                RobotLog.ee(TAG, "Checksum failure: expected 0x%04x, got 0x%04x", checksum, sum);
-                //throw new RuntimeException(String.format("Checksum failure: expected %d, got %d", checksum, sum));
-            }
-            byte[] returnBuffer = new byte[6 + dataLength];
-            System.arraycopy(packetHeader, 0, returnBuffer, 0, 6);
-            System.arraycopy(data, 0, returnBuffer, 6, dataLength);
-            return returnBuffer;
-        }
-        return null;
-    }
-
-    private byte[] readData() {
-        byte[] packetHeader = readMultipleBytes(6);
-        int dataLength = byte2Uint(packetHeader[3]);
-        if (dataLength > 0) {
-            int checksum = byte2Uint(packetHeader[4]);
-            checksum |= byte2Uint(packetHeader[5]) << 8;
             byte[] data = readMultipleBytes(dataLength);
             int sum = 0;
             for (int i = 0; i < dataLength; i++) {
                 sum += byte2Uint(data[i]);
             }
+            // as previously mentioned, we only have the lower 8 bits of the checksum. thus, that's
+            // the only bits we care about in the sum.
+            sum &= 0xff;
             if (sum != checksum) {
                 RobotLog.ee(TAG, "Checksum failure: expected 0x%04x, got 0x%04x", checksum, sum);
                 //throw new RuntimeException(String.format("Checksum failure: expected %d, got %d", checksum, sum));
@@ -240,23 +305,6 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
             return data;
         }
         return null;
-    }
-
-    private byte readSingleByte() {
-        final LynxI2cReadSingleByteCommand cmd = new LynxI2cReadSingleByteCommand(parent, bus, deviceClient.getI2cAddress());
-        try {
-            return parent.acquireI2cLockWhile(() -> {
-                cmd.send();
-
-                return pollForReadResult(1)[0];
-            });
-        } catch (InterruptedException e) {
-            throw new CommunicationException("Pixy2", "Interrupted while reading a single byte", e);
-        } catch (RobotCoreException e) {
-            throw new CommunicationException("Pixy2", "RobotCoreException while reading a single byte", e);
-        } catch (LynxNackException e) {
-            throw new CommunicationException("Pixy2", String.format("LynxNackException while reading a single byte (reason: %s", e.getNack().getNackReasonCode().toString()), e);
-        }
     }
 
     private byte[] readMultipleBytes(int numBytes) {
@@ -273,22 +321,6 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
             throw new CommunicationException("Pixy2", "RobotCoreException while reading multiple bytes", e);
         } catch (LynxNackException e) {
             throw new CommunicationException("Pixy2", String.format("LynxNackException while reading multiple bytes (reason: %s", e.getNack().getNackReasonCode().toString()), e);
-        }
-    }
-
-    private void writeSingleByte(byte b) {
-        final LynxI2cWriteSingleByteCommand cmd = new LynxI2cWriteSingleByteCommand(parent, bus, deviceClient.getI2cAddress(), b);
-        try {
-            parent.acquireI2cLockWhile(() -> {
-                sendCommand(cmd);
-                return null;
-            });
-        } catch (InterruptedException e) {
-            RobotLog.ee(TAG, e, "Interrupted while writing a single byte");
-        } catch (RobotCoreException e) {
-            throw new CommunicationException("Pixy2", "RobotCoreException while writing a single byte", e);
-        } catch (LynxNackException e) {
-            throw new CommunicationException("Pixy2", String.format("LynxNackException while writing a single byte (reason: %s", e.getNack().getNackReasonCode().toString()), e);
         }
     }
 
@@ -388,10 +420,13 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
         return "Pixy2 CMUCam5";
     }
 
-    // the difficulties of converting between C-style unsigned ints and java's two's complement ints
-    // is making me seriously consider writing this class in c++ and using JNI so i don't have to
-    // deal with the conversions
-    private int byte2Uint(byte b) {
-        return b & 0xff;
+    private static int byte2Uint(byte b) {
+        if (b < 0) return b + 128;
+        else return b;
+    }
+
+    private static byte uint2Byte(int i) {
+        if (i > Byte.MAX_VALUE) return (byte) (i + Byte.MIN_VALUE);
+        else return (byte) i;
     }
 }
