@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.ControlSystem;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDeviceWithParameters;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties;
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType;
@@ -33,7 +34,7 @@ import java.util.Optional;
 
 @I2cDeviceType
 @DeviceProperties(xmlTag = "Pixy2", name = "Pixy2", description = "Pixy2 CMUcam5 Vision Camera", compatibleControlSystems = {ControlSystem.REV_HUB})
-public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Optional<LynxModule>> {
+public class Pixy2 extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     private static final String TAG = "Pixy2";
 
@@ -121,11 +122,8 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
         }
     }
 
-    private LynxModule parent;
-    private int bus;
-
-    public Pixy2(I2cDeviceSynch device) {
-        super(device, true, Optional.empty());
+    public Pixy2(I2cDeviceSynch i2cDeviceSynch) {
+        super(i2cDeviceSynch, true);
 
         deviceClient.setI2cAddress(I2cAddr.create7bit(0x54));
 
@@ -133,21 +131,9 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
         deviceClient.engage();
     }
 
-    public boolean initialize(LynxModule module, int bus) {
-        this.bus = bus;
-        return initialize(Optional.of(module));
-    }
-
     @Override
-    protected boolean internalInitialize(@NonNull Optional<LynxModule> optionalModule) {
-        if (!optionalModule.isPresent()) {
-            // apparently internalInitialize() gets called at least twice: once when the object is
-            // created, and once when the user calls initialize() in the OpMode.
-            return false;
-        }
-        parent = optionalModule.get();
-        parameters = optionalModule;
-        return true;
+    protected boolean doInitialize() {
+        return getPixyVersion() != null;
     }
 
     public void setI2cAddress(int address) {
@@ -160,6 +146,7 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
         writePacket(PacketType.GET_VERSION);
         byte[] payload = readPacket();
         if (payload == null) return null;
+        RobotLog.logBytes(TAG, "version", payload, payload.length);
         return new Version(payload);
     }
 
@@ -308,106 +295,11 @@ public class Pixy2 extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, Op
     }
 
     private byte[] readMultipleBytes(int numBytes) {
-        final LynxI2cReadMultipleBytesCommand cmd = new LynxI2cReadMultipleBytesCommand(parent, bus, deviceClient.getI2cAddress(), numBytes);
-        try {
-            return parent.acquireI2cLockWhile(() -> {
-                cmd.send();
-
-                return pollForReadResult(numBytes);
-            });
-        } catch (InterruptedException e) {
-            throw new CommunicationException("Pixy2", "Interrupted while reading multiple bytes", e);
-        } catch (RobotCoreException e) {
-            throw new CommunicationException("Pixy2", "RobotCoreException while reading multiple bytes", e);
-        } catch (LynxNackException e) {
-            throw new CommunicationException("Pixy2", String.format("LynxNackException while reading multiple bytes (reason: %s", e.getNack().getNackReasonCode().toString()), e);
-        }
+        return deviceClient.read(numBytes);
     }
 
     private void writeMultipleBytes(byte[] data) {
-        final LynxI2cWriteMultipleBytesCommand cmd = new LynxI2cWriteMultipleBytesCommand(parent, bus, deviceClient.getI2cAddress(), data);
-        try {
-            parent.acquireI2cLockWhile(() -> {
-                sendCommand(cmd);
-                return null;
-            });
-        } catch (InterruptedException e) {
-            RobotLog.ee(TAG, e, "Interrupted while writing multiple bytes");
-        } catch (RobotCoreException e) {
-            throw new CommunicationException("Pixy2", "RobotCoreException while writing multiple bytes", e);
-        } catch (LynxNackException e) {
-            throw new CommunicationException("Pixy2", String.format("LynxNackException while writing multiple bytes (reason: %s", e.getNack().getNackReasonCode().toString()), e);
-        }
-    }
-
-    // sendCommand and pollForReadResult borrow lots of code from LynxI2cDeviceSynch and
-    // LynxI2cDeviceSynchV2. i've changed the error handling, but that's about it. i'm not sure what
-    // all of the NACK codes are caused by.
-    private void sendCommand(LynxCommand<?> cmd) throws InterruptedException, LynxNackException {
-        while (true) {
-            try {
-                RobotLog.vv(TAG, "Attempting to send command");
-                cmd.send();
-                break;
-            } catch (LynxNackException e) {
-                switch (e.getNack().getNackReasonCodeAsEnum()) {
-                    case I2C_MASTER_BUSY:
-                    case I2C_OPERATION_IN_PROGRESS:
-                        Thread.sleep(3);
-                        break;
-                    default:
-                        throw e;
-                }
-            }
-        }
-    }
-
-    private byte[] pollForReadResult(int numBytes) {
-        boolean keepTrying = true;
-
-        while (keepTrying) {
-            LynxI2cReadStatusQueryCommand readStatus = new LynxI2cReadStatusQueryCommand(parent, bus, numBytes);
-            try {
-                LynxI2cReadStatusQueryResponse response = readStatus.sendReceive();
-                byte[] data = response.getBytes();
-
-                StringBuilder builder = new StringBuilder();
-                builder.append("Recieved data: ");
-                for (byte datum : data) {
-                    builder.append(String.format("0x%02x (%s)", datum, Integer.toBinaryString(byte2Uint(datum))));
-                    builder.append(" ");
-                }
-                RobotLog.vv(TAG, builder.toString());
-                if (data.length == numBytes) {
-                    return data;
-                }
-                RobotLog.ee(TAG, "received an incorrect number of bytes (expected %d, got %d)", numBytes, data.length);
-                keepTrying = false;
-            } catch (LynxNackException e) {
-                switch (e.getNack().getNackReasonCodeAsEnum()) {
-                    case I2C_MASTER_BUSY:               // TODO: REVIEW: is this ever actually returned in this situation?
-                    case I2C_OPERATION_IN_PROGRESS:
-                        // We used to sleep for 3ms while waiting for the result to avoid a "busy loop", but that
-                        // caused a serious performance hit over what we could get otherwise, at least on the CH.
-                        // Besides, we're not *truly* busy looping, we still end up waiting for the module's response
-                        // and what not.
-
-                        //try { Thread.sleep(msBusyWait); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
-                        continue;
-                    case I2C_NO_RESULTS_PENDING:
-                        // This is an internal error of some sort
-                        throw new CommunicationException("Pixy2", "I2cReadStatusQuery NACK'd due to I2C_NO_RESULTS_PENDING", e);
-                    default:
-                        throw new CommunicationException("Pixy2", String.format("I2cReadStatusQuery NACK'd due to %s", e.getNack().getNackReasonCode()), e);
-                }
-            } catch (InterruptedException | RuntimeException e) {
-                throw new CommunicationException("Pixy2", "Received an error while polling for read result", e);
-            }
-        }
-        // this happens about once every 20 calls to pollForReadResult(), and i have no clue why.
-        // according to the logs, it only happens when the ReadStatusQuery command returns an empty
-        // byte array.
-        throw new CommunicationException("Pixy2", "Somehow broke out of polling loop without receiving data");
+        deviceClient.write(data);
     }
 
     @Override
