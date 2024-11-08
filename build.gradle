@@ -1,13 +1,15 @@
 apply plugin: "com.android.library"
 
 android {
+    namespace = 'org.ftc9974.thorcore'
+
     compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 25
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 29
-        versionName "1.1.0"
+        versionName "1.1.1"
         // version code is the version name with dots and leading zeros removed
         versionCode android.defaultConfig.versionName.replaceAll("(\\.)|(^0+)", "").toInteger()
 
@@ -67,10 +69,10 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'org.firstinspires.ftc:RobotCore:10.0.0'
-    implementation 'org.firstinspires.ftc:Hardware:10.0.0'
-    implementation 'org.firstinspires.ftc:FtcCommon:10.0.0'
-    implementation 'org.firstinspires.ftc:Vision:10.0.0'
+    implementation 'org.firstinspires.ftc:RobotCore:10.1.1'
+    implementation 'org.firstinspires.ftc:Hardware:10.1.1'
+    implementation 'org.firstinspires.ftc:FtcCommon:10.1.1'
+    implementation 'org.firstinspires.ftc:Vision:10.1.1'
 
     implementation 'org.apache.commons:commons-lang3:3.9'
 
@@ -80,7 +82,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     implementation 'com.android.support:support-annotations:28.0.0'
-    implementation 'org.jetbrains:annotations:20.1.0'
+    implementation 'org.jetbrains:annotations:23.0.0'
 
     implementation "com.acmerobotics.dashboard:dashboard:0.4.14"
     implementation "com.acmerobotics.roadrunner:core:0.5.6"

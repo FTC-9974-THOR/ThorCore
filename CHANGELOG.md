@@ -1,3 +1,7 @@
+# ThorCore 1.1.1
+
+Updated to FTC SDK v10.1.1
+
 # ThorCore 1.1.0
 
 Updated to FTC SDK v10.0

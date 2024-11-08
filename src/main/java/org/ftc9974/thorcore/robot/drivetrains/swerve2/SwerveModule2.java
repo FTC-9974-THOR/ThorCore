@@ -40,6 +40,8 @@ public class SwerveModule2 {
     private final GainSchedule gainSchedule;
     private final SlewRateLimiter rateLimiter = new SlewRateLimiter(100);
 
+    public boolean turnaroundOptimizationEnabled = true;
+
     public SwerveModule2(String name, HardwareMap hardwareMap, Vector2 position, double servoOffset, double wheelRadius, double gearRatio, double motorFreeSpeed, GainSchedule gainSchedule) {
         this.position = position;
         this.servoOffset = servoOffset;
@@ -77,7 +79,8 @@ public class SwerveModule2 {
     public void setVelocity(Vector2 velocity) {
         double magnitude = velocity.getMagnitude();
         if (Math.abs(magnitude) > 1e-6) { // TODO: 1/6/24 Use an epsilon
-            boolean inverted = velocity.dot(Vector2.unitHeadingVector(getCurrentDirection())) < 0;
+            boolean inverted = turnaroundOptimizationEnabled &&
+                    velocity.dot(Vector2.unitHeadingVector(getCurrentDirection())) < 0;
 
             double heading = velocity.getHeading();
             if (inverted) {

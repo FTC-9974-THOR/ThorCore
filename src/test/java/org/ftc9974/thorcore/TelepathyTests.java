@@ -28,7 +28,7 @@ public class TelepathyTests {
             System.out.print(b);
             System.out.print(String.format(Locale.getDefault(), "\t%8s", Integer.toBinaryString(b)).replace(' ', '0'));
             if (b > 31 && b < 127) {
-                System.out.println("\t" + (char) b);
+                System.out.println(String.format("\t%c", (char) b));
             } else {
                 System.out.println();
             }
@@ -73,7 +73,7 @@ public class TelepathyTests {
             System.out.print(b);
             System.out.print(String.format(Locale.getDefault(), "\t%8s", Integer.toBinaryString(b)).replace(' ', '0'));
             if (b > 31 && b < 127) {
-                System.out.println("\t" + (char) b);
+                System.out.println(String.format("\t%c", (char) b));
             } else {
                 System.out.println();
             }

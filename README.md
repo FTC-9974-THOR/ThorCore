@@ -11,7 +11,7 @@ Download the latest .aar file from the Releases page and put it into the ```lib`
 ```TeamCode``` module. Next, open the ```build.gradle``` file in the ```TeamCode``` module. Inside
 the ```dependencies``` block, add the following line:
 ```gradle
-implementation files("lib/ThorCore-1.1.0.aar")
+implementation files("lib/ThorCore-1.1.1.aar")
 ```
 Run a Gradle sync, and it should be all set.
 
@@ -49,10 +49,10 @@ dependencies {
 
 Run a Gradle sync, and you should be all set. Android Studio should automatically download and install
 the NDK and CMake, but you can download them manually from the SDK Manager if necessary. ThorCore is
-built and tested with NDK version 25.1.8937393 and CMake 3.18.1, but it should work with any recent
+built and tested with NDK version 27.0.12077973 and CMake 3.22.1, but it should work with any recent
 version of the NDK and CMake.
 
 ***
 For additional information, submit an issue or DM @fortraan on Discord (note that you'll have to be in the FTC Discord server to do so).
 ***
-*ThorCore v1.1.0*
+*ThorCore v1.1.1*
